@@ -13,6 +13,8 @@ python -m finance_app.main
 
 Puedes agregar transacciones, importar y exportar archivos CSV y ver un resumen rapido de tus finanzas. Tambien puedes definir metas de ahorro sencillas.
 
+La interfaz ahora se organiza en pestañas para un acceso rapido a cada modulo y cuenta con una tabla interactiva para revisar las transacciones ingresadas.
+
 Otras funciones incluidas en esta version:
 
 - Gestor basico de metas financieras.

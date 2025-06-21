@@ -50,7 +50,14 @@ class FinanceApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('Finance Manager')
-        self.geometry('600x400')
+        self.geometry('700x500')
+
+        # Use a more modern theme if available
+        style = ttk.Style(self)
+        for theme in ('clam', 'alt', 'default'):
+            if theme in style.theme_names():
+                style.theme_use(theme)
+                break
 
         self.user_manager = UserManager()
         if not self.login_flow():
@@ -72,8 +79,23 @@ class FinanceApp(tk.Tk):
         return dialog.success
 
     def create_widgets(self):
-        frame = ttk.Frame(self)
-        frame.pack(fill='both', expand=True, padx=10, pady=10)
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill='both', expand=True)
+
+        self.trans_tab = ttk.Frame(self.notebook)
+        self.import_tab = ttk.Frame(self.notebook)
+        self.goals_tab = ttk.Frame(self.notebook)
+        self.budget_tab = ttk.Frame(self.notebook)
+        self.summary_tab = ttk.Frame(self.notebook)
+
+        self.notebook.add(self.trans_tab, text='Transacciones')
+        self.notebook.add(self.import_tab, text='Importar/Exportar')
+        self.notebook.add(self.goals_tab, text='Metas')
+        self.notebook.add(self.budget_tab, text='Presupuesto')
+        self.notebook.add(self.summary_tab, text='Resumen')
+
+        frame = ttk.Frame(self.trans_tab)
+        frame.pack(fill='x', padx=10, pady=10)
 
         ttk.Label(frame, text='Fecha:').grid(row=0, column=0)
         ttk.Label(frame, text='Descripcion:').grid(row=1, column=0)
@@ -90,28 +112,38 @@ class FinanceApp(tk.Tk):
         self.amount_entry.grid(row=2, column=1)
         self.category_entry.grid(row=3, column=1)
 
+        self.tree = ttk.Treeview(self.trans_tab, columns=('date', 'desc', 'amount', 'cat'), show='headings')
+        self.tree.heading('date', text='Fecha')
+        self.tree.heading('desc', text='Descripcion')
+        self.tree.heading('amount', text='Monto')
+        self.tree.heading('cat', text='Categoria')
+        self.tree.pack(fill='both', expand=True, padx=10, pady=(0, 10))
+
         add_btn = ttk.Button(frame, text='Agregar', command=self.add_transaction)
         add_btn.grid(row=4, column=0, columnspan=2, pady=5)
 
-        import_btn = ttk.Button(frame, text='Importar CSV', command=self.import_export.import_csv_dialog)
-        import_btn.grid(row=5, column=0, pady=5)
-        export_btn = ttk.Button(frame, text='Exportar CSV', command=self.import_export.export_csv_dialog)
-        export_btn.grid(row=5, column=1, pady=5)
-        export_summary_btn = ttk.Button(frame, text='Exportar Resumen', command=self.import_export.export_summary_dialog)
-        export_summary_btn.grid(row=6, column=0, columnspan=2, pady=5)
+        import_btn = ttk.Button(self.import_tab, text='Importar CSV', command=self.import_export.import_csv_dialog)
+        export_btn = ttk.Button(self.import_tab, text='Exportar CSV', command=self.import_export.export_csv_dialog)
+        export_summary_btn = ttk.Button(self.import_tab, text='Exportar Resumen', command=self.import_export.export_summary_dialog)
 
-        goal_btn = ttk.Button(frame, text='Agregar Meta', command=self.add_goal)
-        goal_btn.grid(row=7, column=0, columnspan=2, pady=5)
+        import_btn.pack(padx=10, pady=10, fill='x')
+        export_btn.pack(padx=10, pady=10, fill='x')
+        export_summary_btn.pack(padx=10, pady=10, fill='x')
 
-        show_goals_btn = ttk.Button(frame, text='Ver Metas', command=self.show_goals)
-        show_goals_btn.grid(row=8, column=0, columnspan=2, pady=5)
+        goal_btn = ttk.Button(self.goals_tab, text='Agregar Meta', command=self.add_goal)
+        goal_btn.pack(padx=10, pady=10, fill='x')
+        self.goal_list = tk.Listbox(self.goals_tab)
+        self.goal_list.pack(fill='both', expand=True, padx=10, pady=(0, 10))
 
-        budget_btn = ttk.Button(frame, text='Limite Categoria', command=self.set_budget_limit)
-        budget_btn.grid(row=9, column=0, columnspan=2, pady=5)
-        rate_btn = ttk.Button(frame, text='Tipo de Cambio', command=self.show_exchange_rate)
-        rate_btn.grid(row=10, column=0, columnspan=2, pady=5)
-        summary_btn = ttk.Button(frame, text='Resumen', command=self.show_summary)
-        summary_btn.grid(row=11, column=0, columnspan=2, pady=10)
+        budget_btn = ttk.Button(self.budget_tab, text='Limite Categoria', command=self.set_budget_limit)
+        budget_btn.pack(padx=10, pady=10, fill='x')
+
+        rate_btn = ttk.Button(self.summary_tab, text='Tipo de Cambio', command=self.show_exchange_rate)
+        summary_btn = ttk.Button(self.summary_tab, text='Resumen', command=self.show_summary)
+        rate_btn.pack(padx=10, pady=10, fill='x')
+        summary_btn.pack(padx=10, pady=10, fill='x')
+
+        self.refresh_goals()
 
     def add_transaction(self):
         try:
@@ -127,6 +159,12 @@ class FinanceApp(tk.Tk):
             category=self.category_entry.get()
         )
         self.manager.add_transaction(transaction)
+        self.tree.insert('', 'end', values=(
+            transaction.date,
+            transaction.description,
+            f"{transaction.amount:.2f}",
+            transaction.category,
+        ))
         if amount < 0:
             spent = self.manager.spent_by_category(transaction.category)
             if self.budget.is_exceeded(transaction.category, spent):
@@ -151,6 +189,7 @@ class FinanceApp(tk.Tk):
             return
         self.goals.add_goal(Goal(name=name, target_amount=target))
         notify('Meta', 'Meta agregada', master=self)
+        self.refresh_goals()
 
     def set_budget_limit(self):
         category = self.simple_prompt('Categoria:')
@@ -189,6 +228,13 @@ class FinanceApp(tk.Tk):
             ]
             message = "\n".join(lines)
         messagebox.showinfo('Metas', message)
+        self.refresh_goals()
+
+    def refresh_goals(self):
+        self.goal_list.delete(0, tk.END)
+        for g in self.goals.goals:
+            line = f"{g.name}: {g.saved_amount:.2f}/{g.target_amount:.2f} ({g.progress()*100:.0f}%)"
+            self.goal_list.insert(tk.END, line)
 
     def simple_prompt(self, message: str) -> str | None:
         top = tk.Toplevel(self)

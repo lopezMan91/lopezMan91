@@ -1,10 +1,24 @@
-- 👋 Hi, I’m @lopezMan91
-- 👀 I’m interested in ... learning programming 
-- 🌱 I’m currently learning ...programming 
-- 💞️ I’m looking to collaborate on ...every proyect to help all people
-- 📫 How to reach me ... manuellhtriv91_1@hotmail.com
+# Finance Manager
 
-<!---
-lopezMan91/lopezMan91 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+Simple personal finance application with a Tkinter GUI.
+
+## Requisitos
+- Python 3.8+
+- `matplotlib` (solo para graficas futuras, no obligatorio)
+
+## Uso
+```bash
+python -m finance_app.main
+```
+
+Puedes agregar transacciones, importar y exportar archivos CSV y ver un resumen rapido de tus finanzas. Tambien puedes definir metas de ahorro sencillas.
+
+Otras funciones incluidas en esta version:
+
+- Gestor basico de metas financieras.
+- Sistema de notificaciones simple.
+- Control simple de presupuestos por categoria.
+- Esqueleto de gestion de usuarios y consulta a la API de Banxico (sin depender de `requests`).
+- Pantalla de inicio con registro e inicio de sesión básicos.
+- Consulta rapida del tipo de cambio USD/MXN.
+- Exportacion de resumen de gastos por categoria.

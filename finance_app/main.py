@@ -123,12 +123,18 @@ class FinanceApp(tk.Tk):
         add_btn.grid(row=4, column=0, columnspan=2, pady=5)
 
         import_btn = ttk.Button(self.import_tab, text='Importar CSV', command=self.import_export.import_csv_dialog)
+        import_excel_btn = ttk.Button(self.import_tab, text='Importar Excel', command=self.import_export.import_excel_dialog)
+        import_pdf_btn = ttk.Button(self.import_tab, text='Importar PDF', command=self.import_export.import_pdf_dialog)
         export_btn = ttk.Button(self.import_tab, text='Exportar CSV', command=self.import_export.export_csv_dialog)
+        export_excel_btn = ttk.Button(self.import_tab, text='Exportar Excel', command=self.import_export.export_excel_dialog)
         export_summary_btn = ttk.Button(self.import_tab, text='Exportar Resumen', command=self.import_export.export_summary_dialog)
 
-        import_btn.pack(padx=10, pady=10, fill='x')
-        export_btn.pack(padx=10, pady=10, fill='x')
-        export_summary_btn.pack(padx=10, pady=10, fill='x')
+        import_btn.pack(padx=10, pady=5, fill='x')
+        import_excel_btn.pack(padx=10, pady=5, fill='x')
+        import_pdf_btn.pack(padx=10, pady=5, fill='x')
+        export_btn.pack(padx=10, pady=5, fill='x')
+        export_excel_btn.pack(padx=10, pady=5, fill='x')
+        export_summary_btn.pack(padx=10, pady=5, fill='x')
 
         goal_btn = ttk.Button(self.goals_tab, text='Agregar Meta', command=self.add_goal)
         goal_btn.pack(padx=10, pady=10, fill='x')
@@ -166,8 +172,8 @@ class FinanceApp(tk.Tk):
             transaction.category,
         ))
         if amount < 0:
-            spent = self.manager.spent_by_category(transaction.category)
-            if self.budget.is_exceeded(transaction.category, spent):
+            self.budget.add_expense(transaction.category, -amount)
+            if self.budget.is_exceeded(transaction.category):
                 notify('Presupuesto', f'Limite para {transaction.category} excedido', master=self)
         messagebox.showinfo('Agregado', 'Transaccion agregada')
         self.date_entry.delete(0, tk.END)

@@ -24,3 +24,7 @@ Otras funciones incluidas en esta version:
 - Pantalla de inicio con registro e inicio de sesión básicos.
 - Consulta rapida del tipo de cambio USD/MXN.
 - Exportacion de resumen de gastos por categoria.
+- Importacion y exportacion de archivos Excel y PDF (requiere `openpyxl` y
+  `PyPDF2`).
+- Seguimiento de gastos en el modulo de presupuesto para mostrar lo restante por
+  categoria.

@@ -6,7 +6,6 @@ from .import_export import ImportExport
 from .analysis import Analysis
 from .goals import Goal, GoalManager
 from .notifications import notify
-from .user import User, UserManager
 from .financial_statements import FinancialStatements
 from .policy_import import PolicyPostResult, import_and_post_policies
 from .accounting_core import (
@@ -101,8 +100,6 @@ __all__ = [
     "Goal",
     "GoalManager",
     "notify",
-    "User",
-    "UserManager",
     "FinancialStatements",
     "PolicyPostResult",
     "AccountingEngine",

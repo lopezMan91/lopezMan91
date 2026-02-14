@@ -1,57 +1,33 @@
-from tkinter import filedialog, messagebox
+from __future__ import annotations
 
 from .policy_import import import_and_post_policies
 from .transactions import TransactionManager
 
 
 class ImportExport:
+    """Headless import/export service.
+
+    GUI dialogs were removed to keep finance_app as reusable backend library.
+    """
+
     def __init__(self, manager: TransactionManager, master=None):
         self.manager = manager
         self.master = master
 
+    def import_csv(self, file_path: str):
+        self.manager.import_csv(file_path)
+
+    def import_policies(self, file_path: str):
+        return import_and_post_policies(file_path, self.manager)
+
+    def export_csv(self, file_path: str):
+        self.manager.export_csv(file_path)
+
     def import_csv_dialog(self):
-        file_path = filedialog.askopenfilename(
-            parent=self.master,
-            title='Import CSV',
-            filetypes=[('CSV files', '*.csv')]
-        )
-        if file_path:
-            try:
-                self.manager.import_csv(file_path)
-                messagebox.showinfo('Import', 'Import successful')
-            except Exception as e:
-                messagebox.showerror('Import failed', str(e))
+        raise RuntimeError("Tkinter UI removed. Use import_csv(file_path) or Odoo flows.")
 
     def import_policies_dialog(self):
-        file_path = filedialog.askopenfilename(
-            parent=self.master,
-            title='Importar pólizas',
-            filetypes=[('Excel files', '*.xlsx'), ('CSV files', '*.csv')],
-        )
-        if file_path:
-            try:
-                result = import_and_post_policies(file_path, self.manager)
-                messagebox.showinfo(
-                    'Pólizas posteadas',
-                    (
-                        f"Pólizas posteadas: {result.policies_posted}\n"
-                        f"Líneas leídas: {result.lines_read}\n"
-                        f"Líneas posteadas: {result.lines_posted}"
-                    ),
-                )
-            except Exception as e:
-                messagebox.showerror('Posteo de pólizas fallido', str(e))
+        raise RuntimeError("Tkinter UI removed. Use import_policies(file_path) or Odoo flows.")
 
     def export_csv_dialog(self):
-        file_path = filedialog.asksaveasfilename(
-            parent=self.master,
-            title='Export CSV',
-            defaultextension='.csv',
-            filetypes=[('CSV files', '*.csv')]
-        )
-        if file_path:
-            try:
-                self.manager.export_csv(file_path)
-                messagebox.showinfo('Export', 'Export successful')
-            except Exception as e:
-                messagebox.showerror('Export failed', str(e))
+        raise RuntimeError("Tkinter UI removed. Use export_csv(file_path) or Odoo flows.")

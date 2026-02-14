@@ -1,0 +1,80 @@
+<odoo>
+    <record id="view_mx_dimension_type_tree" model="ir.ui.view">
+        <field name="name">mx.dimension.type.tree</field>
+        <field name="model">mx.dimension.type</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="is_required_default"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_mx_dimension_value_tree" model="ir.ui.view">
+        <field name="name">mx.dimension.value.tree</field>
+        <field name="model">mx.dimension.value</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="type_id"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="parent_id"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_mx_dimension_set_tree" model="ir.ui.view">
+        <field name="name">mx.dimension.set.tree</field>
+        <field name="model">mx.dimension.set</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="hash_key"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_mx_dimension_rule_tree" model="ir.ui.view">
+        <field name="name">mx.dimension.rule.tree</field>
+        <field name="model">mx.dimension.rule</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="account_id"/>
+                <field name="dimension_type_id"/>
+                <field name="required"/>
+                <field name="default_value_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_mx_dimension_type" model="ir.actions.act_window">
+        <field name="name">Dimension Types</field>
+        <field name="res_model">mx.dimension.type</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_mx_dimension_value" model="ir.actions.act_window">
+        <field name="name">Dimension Values</field>
+        <field name="res_model">mx.dimension.value</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_mx_dimension_set" model="ir.actions.act_window">
+        <field name="name">Dimension Sets</field>
+        <field name="res_model">mx.dimension.set</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_mx_dimension_rule" model="ir.actions.act_window">
+        <field name="name">Dimension Rules</field>
+        <field name="res_model">mx.dimension.rule</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

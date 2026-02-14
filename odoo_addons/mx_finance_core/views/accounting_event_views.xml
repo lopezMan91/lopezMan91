@@ -1,0 +1,23 @@
+<odoo>
+    <record id="view_mx_accounting_event_tree" model="ir.ui.view">
+        <field name="name">mx.accounting.event.tree</field>
+        <field name="model">mx.accounting.event</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="event_type"/>
+                <field name="source_model"/>
+                <field name="source_id"/>
+                <field name="company_id"/>
+                <field name="currency_id"/>
+                <field name="ledger_scope"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_accounting_event" model="ir.actions.act_window">
+        <field name="name">Business Events</field>
+        <field name="res_model">mx.accounting.event</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

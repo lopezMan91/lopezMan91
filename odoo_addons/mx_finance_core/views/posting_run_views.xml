@@ -1,0 +1,49 @@
+<odoo>
+    <record id="view_mx_posting_run_tree" model="ir.ui.view">
+        <field name="name">mx.posting.run.tree</field>
+        <field name="model">mx.posting.run</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="event_id"/>
+                <field name="ledger_id"/>
+                <field name="rule_version"/>
+                <field name="run_at"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_mx_posting_run_form" model="ir.ui.view">
+        <field name="name">mx.posting.run.form</field>
+        <field name="model">mx.posting.run</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_preview" type="object" string="Posting Preview" class="btn-primary" states="draft,error"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,previewed,done,error"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="event_id"/>
+                        <field name="ledger_id"/>
+                        <field name="rule_version"/>
+                        <field name="run_at"/>
+                        <field name="move_ids" widget="many2many_tags"/>
+                    </group>
+                    <group string="Preview & Audit">
+                        <field name="preview_payload" nolabel="1"/>
+                        <field name="log" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mx_posting_run" model="ir.actions.act_window">
+        <field name="name">Posting Runs</field>
+        <field name="res_model">mx.posting.run</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,22 @@
+<odoo>
+    <record id="view_mx_hedge_instrument_tree" model="ir.ui.view">
+        <field name="name">mx.hedge.instrument.tree</field>
+        <field name="model">mx.hedge.instrument</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="instrument_type"/>
+                <field name="hedge_type"/>
+                <field name="currency_id"/>
+                <field name="notional"/>
+                <field name="valuation_lock_period"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_hedge_instrument" model="ir.actions.act_window">
+        <field name="name">Hedge Instruments</field>
+        <field name="res_model">mx.hedge.instrument</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

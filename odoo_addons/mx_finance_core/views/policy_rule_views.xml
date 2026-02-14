@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_mx_accounting_policy_tree" model="ir.ui.view">
+        <field name="name">mx.accounting.policy.tree</field>
+        <field name="model">mx.accounting.policy</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="event_type"/>
+                <field name="ledger_id"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_accounting_policy" model="ir.actions.act_window">
+        <field name="name">Accounting Policies</field>
+        <field name="res_model">mx.accounting.policy</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,22 @@
+<odoo>
+    <record id="view_mx_lease_contract_tree" model="ir.ui.view">
+        <field name="name">mx.lease.contract.tree</field>
+        <field name="model">mx.lease.contract</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="asset_class"/>
+                <field name="commencement_date"/>
+                <field name="end_date"/>
+                <field name="rate_type"/>
+                <field name="annual_rate"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_lease_contract" model="ir.actions.act_window">
+        <field name="name">Lease Contracts</field>
+        <field name="res_model">mx.lease.contract</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

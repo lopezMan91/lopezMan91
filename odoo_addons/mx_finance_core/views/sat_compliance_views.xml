@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_mx_sat_export_run_tree" model="ir.ui.view">
+        <field name="name">mx.sat.export.run.tree</field>
+        <field name="model">mx.sat.export.run</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="period_key"/>
+                <field name="export_type"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_sat_export_run" model="ir.actions.act_window">
+        <field name="name">SAT Export Runs</field>
+        <field name="res_model">mx.sat.export.run</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

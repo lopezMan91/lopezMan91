@@ -6,6 +6,7 @@ from .import_export import ImportExport
 from .analysis import Analysis
 from .goals import Goal, GoalManager
 from .notifications import notify
+from .financial_statements import FinancialStatements
 
 class FinanceApp(tk.Tk):
     def __init__(self):
@@ -18,6 +19,7 @@ class FinanceApp(tk.Tk):
         self.import_export = ImportExport(self.manager, self)
         self.analysis = Analysis(self.manager)
         self.goals = GoalManager()
+        self.financial_statements = FinancialStatements(self.manager)
 
         self.create_widgets()
 
@@ -53,6 +55,12 @@ class FinanceApp(tk.Tk):
 
         summary_btn = ttk.Button(frame, text='Resumen', command=self.show_summary)
         summary_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
+        statements_btn = ttk.Button(frame, text='Estados Financieros', command=self.show_financial_statements)
+        statements_btn.grid(row=8, column=0, columnspan=2, pady=5)
+
+        policy_btn = ttk.Button(frame, text='Importar Pólizas (Excel/CSV)', command=self.import_export.import_policies_dialog)
+        policy_btn.grid(row=9, column=0, columnspan=2, pady=5)
 
     def add_transaction(self):
         try:
@@ -91,6 +99,10 @@ class FinanceApp(tk.Tk):
 
     def show_summary(self):
         messagebox.showinfo('Resumen', self.analysis.summary())
+
+    def show_financial_statements(self):
+        report = self.financial_statements.full_report()
+        messagebox.showinfo('Estados Financieros', report)
 
     def simple_prompt(self, message: str) -> str | None:
         top = tk.Toplevel(self)

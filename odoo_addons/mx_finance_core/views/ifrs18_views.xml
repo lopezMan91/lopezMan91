@@ -1,0 +1,39 @@
+<odoo>
+    <record id="view_mx_ifrs18_taxonomy_tree" model="ir.ui.view">
+        <field name="name">mx.ifrs18.taxonomy.tree</field>
+        <field name="model">mx.ifrs18.taxonomy</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="statement_line"/>
+                <field name="category"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_ifrs18_taxonomy" model="ir.actions.act_window">
+        <field name="name">IFRS18 Taxonomy</field>
+        <field name="res_model">mx.ifrs18.taxonomy</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_mx_ifrs18_mpm_tree" model="ir.ui.view">
+        <field name="name">mx.ifrs18.mpm.tree</field>
+        <field name="model">mx.ifrs18.mpm</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ifrs_subtotal_target"/>
+                <field name="version"/>
+                <field name="approved_by"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_ifrs18_mpm" model="ir.actions.act_window">
+        <field name="name">IFRS18 MPM</field>
+        <field name="res_model">mx.ifrs18.mpm</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -16,7 +16,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from finance_app.journal_importer import JournalTemplateImporter
+LIBS = ROOT / "odoo_addons" / "mx_finance_core" / "libs"
+if str(LIBS) not in sys.path:
+    sys.path.insert(0, str(LIBS))
+
+from journal_importer_lib import JournalTemplateImporter
 from finance_app.transactions import TransactionManager
 
 

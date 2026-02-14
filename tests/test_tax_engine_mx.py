@@ -50,12 +50,12 @@ class TaxEngineMXTests(unittest.TestCase):
         ]
 
         result = self.engine.compute_iva_summary(lines)
-        self.assertEqual(result.transferred_iva, 240.0)
-        self.assertEqual(result.creditable_iva, 160.0)
-        self.assertEqual(result.non_creditable_iva, 80.0)
-        self.assertEqual(result.withheld_iva, 106.67)
-        self.assertEqual(result.withheld_isr, 100.0)
-        self.assertEqual(result.diot_by_vendor["AAA010101AAA"], 1000.0)
+        self.assertEqual(result.transferred_iva, Decimal("240.00"))
+        self.assertEqual(result.creditable_iva, Decimal("160.00"))
+        self.assertEqual(result.non_creditable_iva, Decimal("80.00"))
+        self.assertEqual(result.withheld_iva, Decimal("106.67"))
+        self.assertEqual(result.withheld_isr, Decimal("100.00"))
+        self.assertEqual(result.diot_by_vendor["AAA010101AAA"], Decimal("1000.00"))
         self.assertIn("L2", result.blocked_lines)
 
     def test_isr_reconciliation(self):
@@ -119,7 +119,7 @@ class TaxEngineMXTests(unittest.TestCase):
             )
         ]
         result = engine.compute_iva_summary(lines)
-        self.assertEqual(result.transferred_iva, 150.0)
+        self.assertEqual(result.transferred_iva, Decimal("150.00"))
 
     def test_deferred_tax_calculator_layered_impact(self):
         calc = DeferredTaxCalculator(tax_rate=Decimal("0.30"))

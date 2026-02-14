@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from .transactions import PolicyLine
+
 IvaRate = Literal[0.0, 0.16]
 IvaKind = Literal["16", "0", "exento", "no_objeto"]
 
@@ -197,3 +199,31 @@ class TaxEngineMX:
             "movement_count": len(differences),
             "movement_by_code": movement_by_code,
         }
+
+    def build_deferred_tax_policy_lines(
+        self,
+        policy_id: str,
+        posting_date: str,
+        differences: list[TemporaryDifference],
+        ledger_tag: str = "ledger_ifrs",
+        dta_account: str = "1705",
+        dtl_account: str = "2705",
+        p_and_l_account: str = "7301",
+    ) -> list[PolicyLine]:
+        """Generate automatic deferred tax entry lines (NIF D-4 / IAS 12)."""
+        totals = self.compute_deferred_tax_totals(differences)
+        net = totals["net_deferred_tax"]
+        if round(net, 2) == 0:
+            return []
+
+        if net > 0:
+            return [
+                PolicyLine(policy_id, posting_date, "Gasto por impuesto diferido", p_and_l_account, net, 0, ledger_tag),
+                PolicyLine(policy_id, posting_date, "Pasivo por impuesto diferido", dtl_account, 0, net, ledger_tag),
+            ]
+
+        amount = abs(net)
+        return [
+            PolicyLine(policy_id, posting_date, "Activo por impuesto diferido", dta_account, amount, 0, ledger_tag),
+            PolicyLine(policy_id, posting_date, "Ingreso por impuesto diferido", p_and_l_account, 0, amount, ledger_tag),
+        ]

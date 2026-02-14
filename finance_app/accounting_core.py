@@ -24,6 +24,7 @@ class Ledger:
     code: str
     name: str
     principle: str
+    dominant_standard: str = "NIF"
 
 
 @dataclass
@@ -62,6 +63,16 @@ class AccountingPolicy:
     line_rules: list[dict[str, str]]
 
 
+@dataclass
+class AccrualTemplate:
+    template_id: str
+    description: str
+    debit_account: str
+    credit_account: str
+    amount_expr: str
+    ledger_code: str = "LOCAL"
+
+
 class AccountingEngine:
     def __init__(self, manager: TransactionManager):
         self.manager = manager
@@ -72,6 +83,13 @@ class AccountingEngine:
             "ELIM": Ledger("ELIM", "Eliminations", "IFRS"),
         }
         self.entries: list[JournalEntry] = []
+
+    def set_ledger_dominant_standard(self, ledger_code: str, standard: str):
+        """Configure dominant accounting standard by ledger (NIF/IFRS/USGAAP)."""
+        ledger = self.ledgers.get(ledger_code)
+        if not ledger:
+            raise ValueError(f"Ledger inexistente: {ledger_code}")
+        ledger.dominant_standard = standard
 
     def post_event(self, event: BusinessEvent, policies: list[AccountingPolicy]) -> PostingRun:
         run = PostingRun(
@@ -129,6 +147,50 @@ class AccountingEngine:
             self.manager.post_policy_lines(lines_to_post)
         else:
             run.logs.append("No hubo reglas aplicables")
+        return run
+
+    def create_accrual_with_auto_reversal(
+        self,
+        event: BusinessEvent,
+        template: AccrualTemplate,
+        reversal_date: str,
+    ) -> PostingRun:
+        """Create accrual entry and automatic reversal (NIF A-2 devengación)."""
+        amount = float(_eval_amount(template.amount_expr, event.payload))
+        if amount <= 0:
+            raise ValueError("Monto de provisión debe ser positivo")
+
+        accrual_policy = AccountingPolicy(
+            version="accrual-v1",
+            event_type=event.event_type,
+            ledger_code=template.ledger_code,
+            line_rules=[
+                {"account": template.debit_account, "debit": str(amount), "credit": "0", "description": template.description},
+                {"account": template.credit_account, "debit": "0", "credit": str(amount), "description": f"{template.description} (provisión)"},
+            ],
+        )
+        run = self.post_event(event, [accrual_policy])
+
+        reversal_event = BusinessEvent(
+            event_id=f"{event.event_id}-REV",
+            event_type=event.event_type,
+            source_ref=f"{event.source_ref}-REV",
+            company=event.company,
+            currency=event.currency,
+            occurred_at=reversal_date,
+            payload=event.payload,
+        )
+        reversal_policy = AccountingPolicy(
+            version="accrual-v1-rev",
+            event_type=reversal_event.event_type,
+            ledger_code=template.ledger_code,
+            line_rules=[
+                {"account": template.credit_account, "debit": str(amount), "credit": "0", "description": f"Reversa {template.description}"},
+                {"account": template.debit_account, "debit": "0", "credit": str(amount), "description": f"Reversa {template.description}"},
+            ],
+        )
+        rev_run = self.post_event(reversal_event, [reversal_policy])
+        run.logs.extend(rev_run.logs)
         return run
 
 

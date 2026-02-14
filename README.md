@@ -249,3 +249,12 @@ python scripts/stress_test_journal_import.py --entries 50000
 - **Sugerencia NLP heurística**: `suggest_account_and_cost_center` propone cuenta/centro de costo por palabras clave (con confianza y justificación).
 
 > Nota: SSO (Azure AD / Google Workspace) y MFA deben implementarse en la capa de despliegue/autenticación (Odoo auth/provider) y no en estos módulos puros de dominio.
+
+
+## Refuerzo normativo y gobernanza (incremental)
+
+- **Selector de principio dominante por ledger** en motor contable (`NIF`, `IFRS`, `USGAAP`) para paralelismo normativo configurable.
+- **Aprovisionamiento con reversa automática** en `AccountingEngine` para soportar devengación (NIF A-2) sin CFDI en corte.
+- **Asiento automático de impuesto diferido** (`TaxEngineMX.build_deferred_tax_policy_lines`) para diferencias temporales (NIF D-4 / IAS 12).
+- **Hard close con llave hash** en `mx.close.period` y método de reapertura con validación de clave.
+- **Ghost transaction detector** en `account.move` para localizar pólizas LOCAL posteadas sin UUID y no marcadas como accrual/reclass.

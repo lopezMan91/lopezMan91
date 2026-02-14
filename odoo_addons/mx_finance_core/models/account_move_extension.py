@@ -10,6 +10,11 @@ class AccountMove(models.Model):
     mx_policy_version_id = fields.Many2one("mx.accounting.policy.version", string="Policy Version")
     mx_uuid = fields.Char(string="CFDI UUID", index=True)
     mx_evidence_url = fields.Char(string="Evidence Pointer")
+    mx_entry_nature = fields.Selection([
+        ("regular", "Regular"),
+        ("accrual", "Accrual"),
+        ("reclass", "Reclassification"),
+    ], default="regular", required=True)
 
     @api.model
     def _period_key_from_date(self, dt):
@@ -72,6 +77,19 @@ class AccountMove(models.Model):
     def action_post(self):
         self._check_period_lock()
         return super().action_post()
+
+    @api.model
+    def find_ghost_transactions(self, company_id: int | None = None) -> list[int]:
+        """Detect posted LOCAL entries without UUID and not marked as accrual/reclass."""
+        domain = [
+            ("state", "=", "posted"),
+            ("mx_ledger_id.code", "=", "LOCAL"),
+            ("mx_uuid", "=", False),
+            ("mx_entry_nature", "=", "regular"),
+        ]
+        if company_id:
+            domain.append(("company_id", "=", company_id))
+        return self.search(domain).ids
 
 
 class AccountMoveLine(models.Model):

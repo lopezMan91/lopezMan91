@@ -9,7 +9,16 @@ from .notifications import notify
 from .user import User, UserManager
 from .financial_statements import FinancialStatements
 from .policy_import import PolicyPostResult, import_and_post_policies
-from .accounting_core import AccountingEngine, AccountingPolicy, BusinessEvent, Ledger, PostingRun, drilldown_for_ledger
+from .accounting_core import (
+    AccountingEngine,
+    AccountingPolicy,
+    AccrualTemplate,
+    BusinessEvent,
+    Ledger,
+    PostingRun,
+    drilldown_for_ledger,
+    verify_entry_integrity,
+)
 from .fiscal_compliance import FiscalDocument, FiscalVault
 from .report_builder import FinancialStatementBuilder, ReportingTemplate, default_templates
 from .control_framework import ControlLibrary, Control, SODRule, default_control_library
@@ -77,10 +86,12 @@ __all__ = [
     "PolicyPostResult",
     "AccountingEngine",
     "AccountingPolicy",
+    "AccrualTemplate",
     "BusinessEvent",
     "Ledger",
     "PostingRun",
     "drilldown_for_ledger",
+    "verify_entry_integrity",
     "FiscalDocument",
     "FiscalVault",
     "FinancialStatementBuilder",

@@ -78,6 +78,19 @@ class TaxEngineMXTests(unittest.TestCase):
         self.assertEqual(totals["net_deferred_tax"], 300.0)
         self.assertEqual(totals["movement_count"], 2)
 
+    def test_deferred_tax_policy_lines_generation(self):
+        differences = [
+            TemporaryDifference(code="ROU", carrying_amount=10000, tax_base=7000, tax_rate=0.3),
+        ]
+        lines = self.engine.build_deferred_tax_policy_lines(
+            policy_id="DT-001",
+            posting_date="2026-12-31",
+            differences=differences,
+            ledger_tag="ledger_ifrs",
+        )
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(round(sum(l.debit for l in lines), 2), round(sum(l.credit for l in lines), 2))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,12 @@
 import unittest
 
-from finance_app.accounting_core import AccountingEngine, AccountingPolicy, BusinessEvent, verify_entry_integrity
+from finance_app.accounting_core import (
+    AccountingEngine,
+    AccountingPolicy,
+    AccrualTemplate,
+    BusinessEvent,
+    verify_entry_integrity,
+)
 from finance_app.control_framework import default_control_library
 from finance_app.fiscal_compliance import FiscalDocument, FiscalVault
 from finance_app.reconciliation import ReconciliationItem, ReconciliationWorkflow
@@ -54,6 +60,34 @@ class AccountingArchitectureTests(unittest.TestCase):
         # Tamper detection check.
         engine.entries[0].lines[0].debit += 1
         self.assertFalse(verify_entry_integrity(engine.entries[0]))
+
+    def test_accrual_auto_reversal_and_dominant_standard(self):
+        manager = TransactionManager()
+        engine = AccountingEngine(manager)
+        engine.set_ledger_dominant_standard("LOCAL", "NIF")
+        self.assertEqual(engine.ledgers["LOCAL"].dominant_standard, "NIF")
+
+        event = BusinessEvent(
+            event_id="EV-ACR-001",
+            event_type="month_end_accrual",
+            source_ref="ACR-001",
+            company="MX01",
+            currency="MXN",
+            occurred_at="2026-03-31",
+            payload={"accrual_amount": 2500},
+        )
+        template = AccrualTemplate(
+            template_id="ACR-TPL-01",
+            description="Provisión servicios",
+            debit_account="6100",
+            credit_account="2100",
+            amount_expr="payload.accrual_amount",
+            ledger_code="LOCAL",
+        )
+
+        run = engine.create_accrual_with_auto_reversal(event, template, reversal_date="2026-04-01")
+        self.assertTrue(any("LOCAL" in msg for msg in run.logs))
+        self.assertEqual(len(engine.entries), 2)
 
     def test_fiscal_vault_gates(self):
         vault = FiscalVault()

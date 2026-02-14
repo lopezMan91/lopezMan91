@@ -6,8 +6,8 @@ from typing import Literal
 
 from .transactions import PolicyLine
 
-IVA_16 = Decimal("0.16")
-IVA_0 = Decimal("0.00")
+IVA_16 = Decimal('0.16')
+IVA_0 = Decimal('0.00')
 IvaRate = Literal["16", "0"]
 IvaKind = Literal["16", "0", "exento", "no_objeto"]
 
@@ -129,11 +129,11 @@ class TaxEngineMX:
         self.rate_provider = rate_provider or TaxRateProvider()
 
     def compute_iva_summary(self, lines: list[FiscalLine]) -> IVASummaryResult:
-        transferred = Decimal("0.00")
-        creditable = Decimal("0.00")
-        non_creditable = Decimal("0.00")
-        withheld_iva = Decimal("0.00")
-        withheld_isr = Decimal("0.00")
+        transferred = Decimal('0.00')
+        creditable = Decimal('0.00')
+        non_creditable = Decimal('0.00')
+        withheld_iva = Decimal('0.00')
+        withheld_isr = Decimal('0.00')
         diot: dict[str, Decimal] = {}
         blocked: list[str] = []
 
@@ -151,7 +151,7 @@ class TaxEngineMX:
 
             if attrs.iva_creditable and attrs.evidence.is_complete():
                 creditable += line_iva
-                diot[line.vendor_rfc] = diot.get(line.vendor_rfc, Decimal("0.00")) + line.base_amount
+                diot[line.vendor_rfc] = diot.get(line.vendor_rfc, Decimal('0.00')) + line.base_amount
             else:
                 non_creditable += line_iva
                 blocked.append(line.line_id)
@@ -314,7 +314,7 @@ class DeferredTaxCalculator:
 
     def calculate_nif_d4_impact(self, book_value: Decimal, tax_basis: Decimal) -> DeferredTaxCalculation | None:
         difference = (book_value - tax_basis).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        if difference == Decimal("0.00"):
+        if difference == Decimal('0.00'):
             return None
 
         deferred_tax = (abs(difference) * self.tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

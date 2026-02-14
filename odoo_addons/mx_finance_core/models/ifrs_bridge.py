@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from odoo import api, models
+from odoo.exceptions import UserError
 
 from ..libs.finance_app.lease_engine import (
     LeaseContract,
@@ -57,6 +58,13 @@ class IfrsBridge(models.AbstractModel):
             effective_date=params["effective_date"],
             locked_period=params.get("locked_period"),
         )
+
+        existing_moves = self.env["account.move"].search([
+            ("ref", "ilike", f"Amortización IFRS 16 - {contract_id}"),
+            ("state", "!=", "cancel"),
+        ], limit=1)
+        if existing_moves:
+            raise UserError("Ya existen asientos de amortización para este contrato. Cáncelalos antes de re-generar.")
 
         engine = LeaseEngine(TransactionManager())
         snapshot = engine.initial_measurement(contract, discount_rate, at_date=params["effective_date"])

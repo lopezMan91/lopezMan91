@@ -105,7 +105,29 @@ class IVASummaryResult:
     blocked_lines: list[str]
 
 
+
+
+@dataclass(frozen=True)
+class TaxRateProvider:
+    """Configurable rates provider (can be backed by Odoo tables)."""
+
+    rates: dict[str, Decimal] | None = None
+
+    def get_rate(self, code: str, as_of: str | None = None) -> Decimal:
+        _ = as_of
+        configured = self.rates or {}
+        default_rates = {
+            "IVA_GENERAL": Decimal("0.16"),
+            "ISR_CORPORATE": Decimal("0.30"),
+            "PTU_MONTHS_CAP": Decimal("3"),
+        }
+        return configured.get(code, default_rates[code])
+
+
 class TaxEngineMX:
+    def __init__(self, rate_provider: TaxRateProvider | None = None):
+        self.rate_provider = rate_provider or TaxRateProvider()
+
     def compute_iva_summary(self, lines: list[FiscalLine]) -> IVASummaryResult:
         transferred = 0.0
         creditable = 0.0
@@ -117,7 +139,10 @@ class TaxEngineMX:
 
         for line in lines:
             attrs = line.attrs
-            rate = attrs.iva_rate()
+            if attrs.iva_kind == "16":
+                rate = float(self.rate_provider.get_rate("IVA_GENERAL"))
+            else:
+                rate = attrs.iva_rate()
             line_iva = line.base_amount * rate
 
             transferred += line_iva
@@ -168,7 +193,7 @@ class TaxEngineMX:
     def compute_ptu_legal_cap(self, monthly_salary: float, avg_ptu_last_3_years: float) -> float:
         if monthly_salary < 0 or avg_ptu_last_3_years < 0:
             raise ValueError("Parámetros PTU no pueden ser negativos")
-        three_months = monthly_salary * 3
+        three_months = monthly_salary * float(self.rate_provider.get_rate("PTU_MONTHS_CAP"))
         return max(three_months, avg_ptu_last_3_years)
 
     def compute_ptu_legal_for_employee(
@@ -274,7 +299,10 @@ class DeferredTaxCalculation:
 class DeferredTaxCalculator:
     """NIF D-4 / IAS 12 calculator anchored to ledger adjustment layer."""
 
-    def __init__(self, tax_rate: Decimal = Decimal("0.30")):
+    def __init__(self, tax_rate: Decimal | None = None, rate_provider: TaxRateProvider | None = None):
+        if tax_rate is None:
+            provider = rate_provider or TaxRateProvider()
+            tax_rate = provider.get_rate("ISR_CORPORATE")
         if not Decimal("0") <= tax_rate <= Decimal("1"):
             raise ValueError("tax_rate debe estar entre 0 y 1")
         self.tax_rate = tax_rate

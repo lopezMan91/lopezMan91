@@ -78,6 +78,19 @@ class AccountMove(models.Model):
         self._check_period_lock()
         return super().action_post()
 
+
+    def write(self, vals):
+        posted = self.filtered(lambda m: m.state == "posted")
+        if posted and not self.env.context.get("mx_allow_posted_override"):
+            raise ValidationError("Posted entries are immutable. Use reversal/reopen workflow.")
+        return super().write(vals)
+
+    def unlink(self):
+        posted = self.filtered(lambda m: m.state == "posted")
+        if posted and not self.env.context.get("mx_allow_posted_override"):
+            raise ValidationError("Posted entries cannot be deleted. Create reversal entries instead.")
+        return super().unlink()
+
     @api.model
     def find_ghost_transactions(self, company_id: int | None = None) -> list[int]:
         """Detect posted LOCAL entries without UUID and not marked as accrual/reclass."""

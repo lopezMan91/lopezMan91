@@ -9,6 +9,7 @@ from finance_app.tax_engine_mx import (
     TaxEvidencePack,
     TaxLineAttributes,
     TaxLossCarryforward,
+    TaxRateProvider,
     TemporaryDifference,
     compute_dta_from_tax_losses,
 )
@@ -102,6 +103,23 @@ class TaxEngineMXTests(unittest.TestCase):
         self.assertEqual(len(lines), 2)
         self.assertEqual(round(sum(l.debit for l in lines), 2), round(sum(l.credit for l in lines), 2))
 
+
+
+    def test_configurable_tax_rates_provider(self):
+        provider = TaxRateProvider(rates={"IVA_GENERAL": Decimal("0.15")})
+        engine = TaxEngineMX(rate_provider=provider)
+        complete = TaxEvidencePack(xml_attached=True, pdf_attached=True, payment_proof_attached=True)
+        lines = [
+            FiscalLine(
+                line_id="L1",
+                vendor_rfc="AAA010101AAA",
+                concept="Servicio gravado",
+                base_amount=1000,
+                attrs=TaxLineAttributes(iva_kind="16", iva_creditable=True, evidence=complete),
+            )
+        ]
+        result = engine.compute_iva_summary(lines)
+        self.assertEqual(result.transferred_iva, 150.0)
 
     def test_deferred_tax_calculator_layered_impact(self):
         calc = DeferredTaxCalculator(tax_rate=Decimal("0.30"))

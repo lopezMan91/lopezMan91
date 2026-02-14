@@ -1,6 +1,6 @@
 """Modulo principal de la aplicacion Finance Manager."""
 
-from .transactions import FinancialTransaction, PolicyLine, PolicyPostingSummary, Transaction, TransactionManager
+from .transactions import FinancialTransaction, PolicyLine, PolicyPostingSummary, Transaction, TransactionManager, sanitize_money
 from .budget import Budget
 from .import_export import ImportExport
 from .analysis import Analysis
@@ -31,6 +31,7 @@ from .tax_engine_mx import (
     ISRReconciliationResult,
     IVASummaryResult,
     TaxAssetEngine,
+    TaxRateProvider,
     TaxLossCarryforward,
     DeferredTaxCalculation,
     DeferredTaxCalculator,
@@ -89,6 +90,7 @@ def get_exchange_rate() -> float:
 
 __all__ = [
     "FinancialTransaction",
+    "sanitize_money",
     "PolicyLine",
     "PolicyPostingSummary",
     "Transaction",
@@ -145,6 +147,7 @@ __all__ = [
     "TaxEvidencePack",
     "TemporaryDifference",
     "TaxAssetEngine",
+    "TaxRateProvider",
     "TaxLossCarryforward",
     "compute_dta_from_tax_losses",
     "DeferredTaxCalculation",

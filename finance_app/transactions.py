@@ -10,6 +10,14 @@ from typing import Iterable, List, Optional
 TWOPLACES = Decimal("0.01")
 
 
+def sanitize_money(amount: str | Decimal | int) -> Decimal:
+    if isinstance(amount, float):
+        raise TypeError(f"Tipo de dato ilegal para dinero: {type(amount)}")
+    if not isinstance(amount, (str, Decimal, int)):
+        raise TypeError(f"Tipo de dato ilegal para dinero: {type(amount)}")
+    return Decimal(str(amount)).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+
+
 def _to_decimal(value: float | str | Decimal) -> Decimal:
     return Decimal(str(value)).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
 
@@ -27,7 +35,7 @@ class FinancialTransaction:
     reversal_date: Optional[date] = None
 
     def __post_init__(self):
-        object.__setattr__(self, "amount", _to_decimal(self.amount))
+        object.__setattr__(self, "amount", sanitize_money(self.amount))
         if self.amount == Decimal("0.00"):
             raise ValueError("No se permiten transacciones de valor cero en auditoría.")
         if len(self.currency) != 3:

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from hashlib import sha256
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
 from .transactions import PolicyLine, Transaction, TransactionManager
@@ -39,8 +40,8 @@ class PostingRun:
 @dataclass
 class JournalLine:
     account: str
-    debit: float
-    credit: float
+    debit: Decimal
+    credit: Decimal
     description: str
 
 
@@ -111,8 +112,8 @@ class AccountingEngine:
             policy_id = f"{event.event_id}-{policy.ledger_code}"
             entry_lines: list[JournalLine] = []
             for idx, rule in enumerate(policy.line_rules, start=1):
-                debit = float(_eval_amount(rule.get("debit", "0"), event.payload))
-                credit = float(_eval_amount(rule.get("credit", "0"), event.payload))
+                debit = _money(_eval_amount(rule.get("debit", "0"), event.payload))
+                credit = _money(_eval_amount(rule.get("credit", "0"), event.payload))
                 account = rule.get("account", "0000")
                 desc = rule.get("description", event.event_type)
                 entry_lines.append(JournalLine(account=account, debit=debit, credit=credit, description=desc))
@@ -121,8 +122,8 @@ class AccountingEngine:
                     date=event.occurred_at,
                     description=f"{desc} L{idx} {policy.ledger_code}",
                     account=account,
-                    debit=debit,
-                    credit=credit,
+                    debit=float(debit),
+                    credit=float(credit),
                     category=f"ledger_{policy.ledger_code.lower()}",
                 ))
 
@@ -156,8 +157,8 @@ class AccountingEngine:
         reversal_date: str,
     ) -> PostingRun:
         """Create accrual entry and automatic reversal (NIF A-2 devengación)."""
-        amount = float(_eval_amount(template.amount_expr, event.payload))
-        if amount <= 0:
+        amount = _money(_eval_amount(template.amount_expr, event.payload))
+        if amount <= Decimal("0.00"):
             raise ValueError("Monto de provisión debe ser positivo")
 
         accrual_policy = AccountingPolicy(
@@ -165,8 +166,8 @@ class AccountingEngine:
             event_type=event.event_type,
             ledger_code=template.ledger_code,
             line_rules=[
-                {"account": template.debit_account, "debit": str(amount), "credit": "0", "description": template.description},
-                {"account": template.credit_account, "debit": "0", "credit": str(amount), "description": f"{template.description} (provisión)"},
+                {"account": template.debit_account, "debit": f"{amount}", "credit": "0", "description": template.description},
+                {"account": template.credit_account, "debit": "0", "credit": f"{amount}", "description": f"{template.description} (provisión)"},
             ],
         )
         run = self.post_event(event, [accrual_policy])
@@ -185,8 +186,8 @@ class AccountingEngine:
             event_type=reversal_event.event_type,
             ledger_code=template.ledger_code,
             line_rules=[
-                {"account": template.credit_account, "debit": str(amount), "credit": "0", "description": f"Reversa {template.description}"},
-                {"account": template.debit_account, "debit": "0", "credit": str(amount), "description": f"Reversa {template.description}"},
+                {"account": template.credit_account, "debit": f"{amount}", "credit": "0", "description": f"Reversa {template.description}"},
+                {"account": template.debit_account, "debit": "0", "credit": f"{amount}", "description": f"Reversa {template.description}"},
             ],
         )
         rev_run = self.post_event(reversal_event, [reversal_policy])
@@ -194,11 +195,11 @@ class AccountingEngine:
         return run
 
 
-def _eval_amount(expr: str, payload: dict[str, Any]) -> float:
+def _eval_amount(expr: str, payload: dict[str, Any]) -> Decimal:
     cleaned = expr.strip()
     if cleaned.startswith("payload."):
-        return float(payload.get(cleaned.split(".", 1)[1], 0) or 0)
-    return float(cleaned or 0)
+        return _money(payload.get(cleaned.split(".", 1)[1], 0) or 0)
+    return _money(cleaned or 0)
 
 
 def drilldown_for_ledger(transactions: list[Transaction], ledger_code: str) -> list[Transaction]:
@@ -215,7 +216,7 @@ def _entry_integrity_hash(
 ) -> str:
     base = [entry_id, company, ledger_code, event_id]
     for line in lines:
-        base.append(f"{line.account}|{line.debit:.2f}|{line.credit:.2f}|{line.description}")
+        base.append(f"{line.account}|{line.debit.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}|{line.credit.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}|{line.description}")
     return sha256("||".join(base).encode("utf-8")).hexdigest()
 
 
@@ -228,3 +229,7 @@ def verify_entry_integrity(entry: JournalEntry) -> bool:
         entry.lines,
     )
     return expected == entry.integrity_hash
+
+
+def _money(value: Any) -> Decimal:
+    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

@@ -2,7 +2,7 @@ import unittest
 from datetime import date
 from decimal import Decimal
 
-from finance_app.transactions import FinancialTransaction, PolicyLine, TransactionManager
+from finance_app.transactions import FinancialTransaction, PolicyLine, TransactionManager, sanitize_money
 
 
 class TransactionsPrecisionTests(unittest.TestCase):
@@ -15,6 +15,11 @@ class TransactionsPrecisionTests(unittest.TestCase):
             is_accrual=True,
         )
         self.assertEqual(tx.amount, Decimal("100.13"))
+
+
+    def test_sanitize_money_rejects_float(self):
+        with self.assertRaises(TypeError):
+            sanitize_money(10.5)
 
     def test_policy_posting_balances_with_decimal_guard(self):
         manager = TransactionManager()

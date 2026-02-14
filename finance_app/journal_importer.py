@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
+from decimal import Decimal, ROUND_HALF_UP
 
 from .policy_import import _read_xlsx_rows
 from .transactions import PolicyLine, TransactionManager
@@ -28,9 +29,9 @@ class JournalImportRow:
     line_no: int
     account_code: str
     partner: str
-    debit: float
-    credit: float
-    amount_currency: float
+    debit: Decimal
+    credit: Decimal
+    amount_currency: Decimal
     analytic_account: str
     tags: str
     tax_code: str
@@ -53,11 +54,11 @@ class JournalImportStaging:
     approved: bool = False
     posted: bool = False
 
-    def preview(self) -> dict[str, dict[str, float]]:
-        grouped: dict[str, dict[str, float]] = {}
+    def preview(self) -> dict[str, dict[str, Decimal | int]]:
+        grouped: dict[str, dict[str, Decimal | int]] = {}
         for row in self.rows:
             key = f"{row.batch_id}|{row.ref}|{row.posting_date}"
-            bucket = grouped.setdefault(key, {"debit": 0.0, "credit": 0.0, "lines": 0})
+            bucket = grouped.setdefault(key, {"debit": Decimal("0.00"), "credit": Decimal("0.00"), "lines": 0})
             bucket["debit"] += row.debit
             bucket["credit"] += row.credit
             bucket["lines"] += 1
@@ -150,7 +151,7 @@ class JournalTemplateImporter:
 
     def _validate(self, rows: list[JournalImportRow]) -> list[JournalValidationError]:
         errors: list[JournalValidationError] = []
-        grouped: dict[str, tuple[float, float, str]] = {}
+        grouped: dict[str, tuple[Decimal, Decimal, str]] = {}
         valid_ledgers = {"LOCAL", "IFRS", "CONSOLIDATION", "ELIMINATIONS"}
 
         for i, row in enumerate(rows, start=2):
@@ -164,11 +165,11 @@ class JournalTemplateImporter:
                 errors.append(JournalValidationError(i, "Tipo de cambio faltante"))
 
             key = f"{row.batch_id}|{row.ref}|{row.posting_date}|{row.ledger}"
-            debit, credit, first_row = grouped.get(key, (0.0, 0.0, str(i)))
+            debit, credit, first_row = grouped.get(key, (Decimal("0.00"), Decimal("0.00"), str(i)))
             grouped[key] = (debit + row.debit, credit + row.credit, first_row)
 
         for key, (debit, credit, first_row) in grouped.items():
-            if round(debit - credit, 2) != 0:
+            if (debit - credit).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) != Decimal("0.00"):
                 errors.append(JournalValidationError(int(first_row), f"Póliza desbalanceada {key}: {debit} vs {credit}"))
 
         return errors
@@ -198,9 +199,9 @@ class JournalTemplateImporter:
             line_no=int(opt("line_no", "1")),
             account_code=req("account_code"),
             partner=opt("partner"),
-            debit=float(opt("debit", "0") or 0),
-            credit=float(opt("credit", "0") or 0),
-            amount_currency=float(opt("amount_currency", "0") or 0),
+            debit=_money(opt("debit", "0")),
+            credit=_money(opt("credit", "0")),
+            amount_currency=_money(opt("amount_currency", "0")),
             analytic_account=opt("analytic_account"),
             tags=opt("tags"),
             tax_code=opt("tax_code"),
@@ -226,3 +227,7 @@ class JournalTemplateImporter:
             for chunk in iter(lambda: fh.read(65536), b""):
                 digest.update(chunk)
         return digest.hexdigest()
+
+
+def _money(value: str | Decimal) -> Decimal:
+    return Decimal(str(value or "0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

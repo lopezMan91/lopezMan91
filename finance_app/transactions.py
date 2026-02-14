@@ -1,6 +1,37 @@
+from __future__ import annotations
+
 import csv
 from dataclasses import dataclass, field
-from typing import Iterable, List
+from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
+from typing import Iterable, List, Optional
+
+
+TWOPLACES = Decimal("0.01")
+
+
+def _to_decimal(value: float | str | Decimal) -> Decimal:
+    return Decimal(str(value)).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+
+
+@dataclass(frozen=True)
+class FinancialTransaction:
+    """Audit-safe immutable transaction model using Decimal precision."""
+
+    transaction_id: str
+    transaction_date: date
+    amount: Decimal
+    currency: str = "MXN"
+    ledger_type: str = "FISCAL"
+    is_accrual: bool = False
+    reversal_date: Optional[date] = None
+
+    def __post_init__(self):
+        object.__setattr__(self, "amount", _to_decimal(self.amount))
+        if self.amount == Decimal("0.00"):
+            raise ValueError("No se permiten transacciones de valor cero en auditoría.")
+        if len(self.currency) != 3:
+            raise ValueError("currency debe tener 3 caracteres (ISO)")
 
 
 @dataclass
@@ -20,9 +51,11 @@ class PolicyLine:
     debit: float
     credit: float
     category: str = "poliza"
+    is_accrual: bool = False
+    reversal_date: Optional[str] = None
 
     def signed_amount(self) -> float:
-        return self.debit - self.credit
+        return float(_to_decimal(self.debit) - _to_decimal(self.credit))
 
 
 @dataclass
@@ -49,9 +82,9 @@ class TransactionManager:
             raise ValueError("No hay lineas de poliza para postear")
 
         for policy_id, policy_lines in grouped.items():
-            debit_total = sum(line.debit for line in policy_lines)
-            credit_total = sum(line.credit for line in policy_lines)
-            if round(debit_total - credit_total, 2) != 0:
+            debit_total = sum(_to_decimal(line.debit) for line in policy_lines)
+            credit_total = sum(_to_decimal(line.credit) for line in policy_lines)
+            if (debit_total - credit_total).quantize(TWOPLACES, rounding=ROUND_HALF_UP) != Decimal("0.00"):
                 raise ValueError(f"Poliza desbalanceada {policy_id}: cargo={debit_total}, abono={credit_total}")
 
             for line in policy_lines:
@@ -65,10 +98,10 @@ class TransactionManager:
         return PolicyPostingSummary(lines_posted=line_count, policies_posted=len(grouped))
 
     def total_income(self) -> float:
-        return sum(t.amount for t in self.transactions if t.amount > 0)
+        return float(sum(_to_decimal(t.amount) for t in self.transactions if _to_decimal(t.amount) > 0))
 
     def total_expenses(self) -> float:
-        return sum(-t.amount for t in self.transactions if t.amount < 0)
+        return float(sum(-_to_decimal(t.amount) for t in self.transactions if _to_decimal(t.amount) < 0))
 
     def balance(self) -> float:
         return self.total_income() - self.total_expenses()

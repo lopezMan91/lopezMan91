@@ -261,3 +261,33 @@ def compute_dta_from_tax_losses(
         raise ValueError("isr_rate debe estar entre 0 y 1")
     total_loss = sum(max(loss.available_amount, 0.0) for loss in losses)
     return round(total_loss * isr_rate, 2)
+
+
+@dataclass(frozen=True)
+class DeferredTaxCalculation:
+    temp_difference: Decimal
+    deferred_tax: Decimal
+    type: str
+    ledger_target: str = "IFRS_ADJUSTMENTS"
+
+
+class DeferredTaxCalculator:
+    """NIF D-4 / IAS 12 calculator anchored to ledger adjustment layer."""
+
+    def __init__(self, tax_rate: Decimal = Decimal("0.30")):
+        if not Decimal("0") <= tax_rate <= Decimal("1"):
+            raise ValueError("tax_rate debe estar entre 0 y 1")
+        self.tax_rate = tax_rate
+
+    def calculate_nif_d4_impact(self, book_value: Decimal, tax_basis: Decimal) -> DeferredTaxCalculation | None:
+        difference = (book_value - tax_basis).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if difference == Decimal("0.00"):
+            return None
+
+        deferred_tax = (abs(difference) * self.tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        impact_type = "DTL" if difference > 0 else "DTA"
+        return DeferredTaxCalculation(
+            temp_difference=difference,
+            deferred_tax=deferred_tax,
+            type=impact_type,
+        )

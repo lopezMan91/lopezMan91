@@ -1,6 +1,6 @@
 """Modulo principal de la aplicacion Finance Manager."""
 
-from .transactions import PolicyLine, PolicyPostingSummary, Transaction, TransactionManager
+from .transactions import FinancialTransaction, PolicyLine, PolicyPostingSummary, Transaction, TransactionManager
 from .budget import Budget
 from .import_export import ImportExport
 from .analysis import Analysis
@@ -32,6 +32,8 @@ from .tax_engine_mx import (
     IVASummaryResult,
     TaxAssetEngine,
     TaxLossCarryforward,
+    DeferredTaxCalculation,
+    DeferredTaxCalculator,
     TaxEngineMX,
     TaxEvidencePack,
     TaxLineAttributes,
@@ -41,6 +43,7 @@ from .tax_engine_mx import (
 from .gaap_router import (
     AccountingStandard,
     AssetRevaluationRouter,
+    GAAPRouter,
     DeferredTaxImpact,
     DeferredTaxManager,
     GAAP_RULES,
@@ -85,6 +88,7 @@ def get_exchange_rate() -> float:
 
 
 __all__ = [
+    "FinancialTransaction",
     "PolicyLine",
     "PolicyPostingSummary",
     "Transaction",
@@ -143,6 +147,8 @@ __all__ = [
     "TaxAssetEngine",
     "TaxLossCarryforward",
     "compute_dta_from_tax_losses",
+    "DeferredTaxCalculation",
+    "DeferredTaxCalculator",
     "TaxEngineMX",
     "IVASummaryResult",
     "ISRReconciliationResult",
@@ -164,6 +170,7 @@ __all__ = [
     "DeferredTaxManager",
     "RevaluationImpact",
     "AssetRevaluationRouter",
+    "GAAPRouter",
     "run_monthly_depreciation_by_ledger",
     "import_and_post_policies",
     "get_exchange_rate",

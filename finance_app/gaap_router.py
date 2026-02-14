@@ -87,6 +87,30 @@ class DeferredTaxManager:
         )
 
 
+
+
+class GAAPRouter:
+    """Rule gate used by import/posting pipelines before writing to a ledger."""
+
+    def __init__(self, context_ledger: AccountingStandard | str):
+        self.context = context_ledger if isinstance(context_ledger, AccountingStandard) else AccountingStandard(context_ledger)
+
+    def capabilities(self) -> StandardCapabilities:
+        return GAAP_RULES[self.context]
+
+    def can_revalue_asset(self) -> bool:
+        return self.capabilities().allows_revaluation_to_fair_value
+
+    def get_depreciation_method(self, asset_type: str = "generic") -> str:
+        _ = asset_type
+        caps = self.capabilities()
+        if self.context == AccountingStandard.US_GAAP and caps.depreciation_method_strict:
+            return "STRAIGHT_LINE_STRICT"
+        if caps.component_depreciation:
+            return "COMPONENT"
+        return "STRAIGHT_LINE"
+
+
 class AssetRevaluationRouter:
     def __init__(self, deferred_tax_manager: DeferredTaxManager | None = None):
         self.deferred_tax_manager = deferred_tax_manager or DeferredTaxManager()

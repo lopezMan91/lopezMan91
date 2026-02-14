@@ -4,6 +4,7 @@ from decimal import Decimal
 from finance_app.gaap_router import (
     AccountingStandard,
     AssetRevaluationRouter,
+    GAAPRouter,
     LedgerContext,
     run_monthly_depreciation_by_ledger,
 )
@@ -28,6 +29,16 @@ class GaapRouterTests(unittest.TestCase):
         self.assertEqual(by_standard[AccountingStandard.US_GAAP].action, "SKIPPED_RULE_VIOLATION")
         self.assertEqual(by_standard[AccountingStandard.IFRS].action, "SUCCESS")
         self.assertIsNotNone(by_standard[AccountingStandard.IFRS].deferred_tax)
+
+
+    def test_gaap_router_capabilities(self):
+        ifrs_router = GAAPRouter("IFRS")
+        self.assertTrue(ifrs_router.can_revalue_asset())
+        self.assertEqual(ifrs_router.get_depreciation_method("fixed_asset"), "COMPONENT")
+
+        us_router = GAAPRouter(AccountingStandard.US_GAAP)
+        self.assertFalse(us_router.can_revalue_asset())
+        self.assertEqual(us_router.get_depreciation_method("fixed_asset"), "STRAIGHT_LINE_STRICT")
 
     def test_monthly_depreciation_by_ledger(self):
         values = run_monthly_depreciation_by_ledger(

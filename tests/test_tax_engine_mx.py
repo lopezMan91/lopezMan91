@@ -2,6 +2,7 @@ import unittest
 from decimal import Decimal
 
 from finance_app.tax_engine_mx import (
+    DeferredTaxCalculator,
     FiscalLine,
     TaxAssetEngine,
     TaxEngineMX,
@@ -100,6 +101,16 @@ class TaxEngineMXTests(unittest.TestCase):
         )
         self.assertEqual(len(lines), 2)
         self.assertEqual(round(sum(l.debit for l in lines), 2), round(sum(l.credit for l in lines), 2))
+
+
+    def test_deferred_tax_calculator_layered_impact(self):
+        calc = DeferredTaxCalculator(tax_rate=Decimal("0.30"))
+        result = calc.calculate_nif_d4_impact(Decimal("150.00"), Decimal("100.00"))
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result.type, "DTL")
+        self.assertEqual(result.deferred_tax, Decimal("15.00"))
+        self.assertEqual(result.ledger_target, "IFRS_ADJUSTMENTS")
 
     def test_inpc_tax_deduction(self):
         deduction = TaxAssetEngine.calculate_tax_deduction(

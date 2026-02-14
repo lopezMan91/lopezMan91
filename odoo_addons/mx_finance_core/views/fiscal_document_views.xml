@@ -1,0 +1,26 @@
+<odoo>
+    <record id="view_mx_fiscal_document_tree" model="ir.ui.view">
+        <field name="name">mx.fiscal.document.tree</field>
+        <field name="model">mx.fiscal.document</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="uuid"/>
+                <field name="rfc_emisor"/>
+                <field name="rfc_receptor"/>
+                <field name="total"/>
+                <field name="sat_status"/>
+                <field name="lco_status"/>
+                <field name="efos_status"/>
+                <field name="compliance_blocked"/>
+                <field name="event_id"/>
+                <field name="move_id"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_fiscal_document" model="ir.actions.act_window">
+        <field name="name">Fiscal Vault</field>
+        <field name="res_model">mx.fiscal.document</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

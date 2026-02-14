@@ -1,0 +1,19 @@
+<odoo>
+    <record id="view_mx_dimension_tree" model="ir.ui.view">
+        <field name="name">mx.dimension.tree</field>
+        <field name="model">mx.dimension</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="dimension_type"/>
+                <field name="company_id"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_dimension" model="ir.actions.act_window">
+        <field name="name">Dimensions</field>
+        <field name="res_model">mx.dimension</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

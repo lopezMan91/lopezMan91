@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_mx_fx_revaluation_run_tree" model="ir.ui.view">
+        <field name="name">mx.fx.revaluation.run.tree</field>
+        <field name="model">mx.fx.revaluation.run</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="period_key"/>
+                <field name="rate_type"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_fx_revaluation_run" model="ir.actions.act_window">
+        <field name="name">FX Revaluation</field>
+        <field name="res_model">mx.fx.revaluation.run</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

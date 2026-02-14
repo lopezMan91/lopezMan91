@@ -1,0 +1,15 @@
+<odoo>
+    <record id="view_account_account_form_mx_finance_core" model="ir.ui.view">
+        <field name="name">account.account.form.mx.finance.core</field>
+        <field name="model">account.account</field>
+        <field name="inherit_id" ref="account.view_account_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <group string="MX Dimension Policy">
+                    <field name="mx_require_profit_center"/>
+                    <field name="mx_require_cost_center"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,20 @@
+<odoo>
+    <record id="view_mx_statement_package_tree" model="ir.ui.view">
+        <field name="name">mx.statement.package.tree</field>
+        <field name="model">mx.statement.package</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="period_key"/>
+                <field name="status"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_statement_package" model="ir.actions.act_window">
+        <field name="name">Statement Packages</field>
+        <field name="res_model">mx.statement.package</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

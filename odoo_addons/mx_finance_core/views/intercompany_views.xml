@@ -1,0 +1,20 @@
+<odoo>
+    <record id="view_mx_intercompany_tag_tree" model="ir.ui.view">
+        <field name="name">mx.intercompany.tag.tree</field>
+        <field name="model">mx.intercompany.tag</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="counterparty_company_id"/>
+                <field name="external_ref"/>
+                <field name="elimination_status"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_intercompany_tag" model="ir.actions.act_window">
+        <field name="name">Intercompany Matching</field>
+        <field name="res_model">mx.intercompany.tag</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

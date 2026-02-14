@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_mx_reporting_template_tree" model="ir.ui.view">
+        <field name="name">mx.reporting.template.tree</field>
+        <field name="model">mx.reporting.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="ledger_id"/>
+                <field name="statement_type"/>
+                <field name="version"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_reporting_template" model="ir.actions.act_window">
+        <field name="name">Statement Designer</field>
+        <field name="res_model">mx.reporting.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

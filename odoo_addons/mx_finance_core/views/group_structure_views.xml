@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_mx_group_entity_tree" model="ir.ui.view">
+        <field name="name">mx.group.entity.tree</field>
+        <field name="model">mx.group.entity</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="parent_id"/>
+                <field name="ownership_pct"/>
+                <field name="control_pct"/>
+                <field name="consolidation_method"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_group_entity" model="ir.actions.act_window">
+        <field name="name">Group Structure</field>
+        <field name="res_model">mx.group.entity</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

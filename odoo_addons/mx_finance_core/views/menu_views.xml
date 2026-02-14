@@ -1,0 +1,65 @@
+<odoo>
+    <menuitem id="menu_mx_finance_root" name="MX Finance" parent="account.menu_finance" sequence="90"/>
+
+    <menuitem id="menu_mx_core" name="Contabilidad (Core)" parent="menu_mx_finance_root" sequence="10"/>
+    <menuitem id="menu_mx_core_dashboard" name="Inicio (Dashboard)" parent="menu_mx_core" action="action_mx_close_cockpit" sequence="1"/>
+    <menuitem id="menu_mx_core_events" name="Eventos" parent="menu_mx_core" action="action_mx_accounting_event" sequence="2"/>
+    <menuitem id="menu_mx_core_posting" name="Posting runs" parent="menu_mx_core" action="action_mx_posting_run" sequence="3"/>
+    <menuitem id="menu_mx_core_moves" name="Pólizas" parent="menu_mx_core" action="account.action_move_journal_line" sequence="4"/>
+    <menuitem id="menu_mx_core_staging" name="Pólizas importadas (staging)" parent="menu_mx_core" action="action_mx_journal_import_batch" sequence="5"/>
+    <menuitem id="menu_mx_core_catalogs" name="Catálogos" parent="menu_mx_core" sequence="6"/>
+    <menuitem id="menu_mx_core_ledgers" name="Ledgers" parent="menu_mx_core_catalogs" action="action_mx_finance_ledger" sequence="1"/>
+    <menuitem id="menu_mx_core_policy" name="Motor de reglas" parent="menu_mx_core_catalogs" action="action_mx_accounting_policy" sequence="2" groups="mx_finance_core.group_mx_policy_admin"/>
+    <menuitem id="menu_mx_core_dimension_types" name="Tipos de dimensión" parent="menu_mx_core_catalogs" action="action_mx_dimension_type" sequence="4"/>
+    <menuitem id="menu_mx_core_dimension_values" name="Valores de dimensión" parent="menu_mx_core_catalogs" action="action_mx_dimension_value" sequence="5"/>
+    <menuitem id="menu_mx_core_dimension_sets" name="Dimension sets" parent="menu_mx_core_catalogs" action="action_mx_dimension_set" sequence="6"/>
+    <menuitem id="menu_mx_core_dimension_rules" name="Reglas de dimensión" parent="menu_mx_core_catalogs" action="action_mx_dimension_rule" sequence="7"/>
+    <menuitem id="menu_mx_core_period_locks" name="Locks de periodo" parent="menu_mx_core_catalogs" action="action_mx_account_period_lock" sequence="8"/>
+
+    <menuitem id="menu_mx_sat_root" name="SAT MX" parent="menu_mx_finance_root" sequence="20"/>
+    <menuitem id="menu_mx_sat_cfdi" name="CFDI Vault" parent="menu_mx_sat_root" action="action_mx_fiscal_document" sequence="1"/>
+    <menuitem id="menu_mx_sat_ce" name="Contabilidad Electrónica" parent="menu_mx_sat_root" action="action_mx_sat_export_run" sequence="2"/>
+    <menuitem id="menu_mx_sat_diot" name="DIOT" parent="menu_mx_sat_root" action="action_mx_sat_export_run" sequence="3"/>
+
+    <menuitem id="menu_mx_fx_root" name="Tesorería/FX" parent="menu_mx_finance_root" sequence="30"/>
+    <menuitem id="menu_mx_fx_rates" name="Tipos de cambio" parent="menu_mx_fx_root" action="action_mx_rate_table" sequence="1"/>
+    <menuitem id="menu_mx_fx_revaluation" name="Revaluación" parent="menu_mx_fx_root" action="action_mx_fx_revaluation_run" sequence="2"/>
+
+    <menuitem id="menu_mx_profit_root" name="Gestión" parent="menu_mx_finance_root" sequence="40"/>
+    <menuitem id="menu_mx_profit_dimensions" name="Dimensiones" parent="menu_mx_profit_root" action="action_mx_dimension_value" sequence="1"/>
+    <menuitem id="menu_mx_profit_alloc" name="Allocations" parent="menu_mx_profit_root" action="action_mx_close_cockpit" sequence="2"/>
+
+    <menuitem id="menu_mx_ifrs16_root" name="IFRS16" parent="menu_mx_finance_root" sequence="50" groups="mx_finance_core.group_mx_accounting_ifrs"/>
+    <menuitem id="menu_mx_ifrs16_contracts" name="Contratos" parent="menu_mx_ifrs16_root" action="action_mx_lease_contract" sequence="1"/>
+    <menuitem id="menu_mx_ifrs16_rates" name="Tasas" parent="menu_mx_ifrs16_root" action="action_mx_rate_table" sequence="2"/>
+    <menuitem id="menu_mx_ifrs16_calendar" name="Calendarios y posteo" parent="menu_mx_ifrs16_root" action="action_mx_lease_contract" sequence="3"/>
+    <menuitem id="menu_mx_ifrs16_reports" name="Reportes" parent="menu_mx_ifrs16_root" action="action_mx_statement_package" sequence="4"/>
+
+    <menuitem id="menu_mx_ifrs9_root" name="IFRS9" parent="menu_mx_finance_root" sequence="60" groups="mx_finance_core.group_mx_accounting_ifrs"/>
+    <menuitem id="menu_mx_ifrs9_instruments" name="Instrumentos" parent="menu_mx_ifrs9_root" action="action_mx_hedge_instrument" sequence="1"/>
+    <menuitem id="menu_mx_ifrs9_market" name="Mercado y valuación" parent="menu_mx_ifrs9_root" action="action_mx_hedge_instrument" sequence="2"/>
+    <menuitem id="menu_mx_ifrs9_hedges" name="Coberturas" parent="menu_mx_ifrs9_root" action="action_mx_hedge_instrument" sequence="3"/>
+    <menuitem id="menu_mx_ifrs9_reports" name="Reportes" parent="menu_mx_ifrs9_root" action="action_mx_statement_package" sequence="4"/>
+
+    <menuitem id="menu_mx_reports_root" name="Reportes" parent="menu_mx_finance_root" sequence="70"/>
+    <menuitem id="menu_mx_reports_designer" name="Diseñador de estados" parent="menu_mx_reports_root" action="action_mx_reporting_template" sequence="1"/>
+    <menuitem id="menu_mx_reports_publish" name="Publicación" parent="menu_mx_reports_root" action="action_mx_statement_package" sequence="2"/>
+
+    <menuitem id="menu_mx_ifrs18_root" name="IFRS18" parent="menu_mx_finance_root" sequence="75"/>
+    <menuitem id="menu_mx_ifrs18_taxonomy" name="Taxonomía" parent="menu_mx_ifrs18_root" action="action_mx_ifrs18_taxonomy" sequence="1"/>
+    <menuitem id="menu_mx_ifrs18_mpm" name="MPM" parent="menu_mx_ifrs18_root" action="action_mx_ifrs18_mpm" sequence="2"/>
+
+    <menuitem id="menu_mx_conso_root" name="Consolidación" parent="menu_mx_finance_root" sequence="80" groups="mx_finance_core.group_mx_consolidation_manager"/>
+    <menuitem id="menu_mx_conso_group" name="Grupo" parent="menu_mx_conso_root" action="action_mx_group_entity" sequence="1"/>
+    <menuitem id="menu_mx_conso_pack" name="Packs" parent="menu_mx_conso_root" action="action_mx_conso_pack" sequence="2"/>
+    <menuitem id="menu_mx_conso_translation" name="Conversión y CTA" parent="menu_mx_conso_root" action="action_mx_conso_translation_run" sequence="3"/>
+    <menuitem id="menu_mx_conso_elim" name="Eliminaciones" parent="menu_mx_conso_root" action="action_mx_conso_elimination_run" sequence="4"/>
+    <menuitem id="menu_mx_conso_states" name="Estados consolidados" parent="menu_mx_conso_root" action="action_mx_statement_package" sequence="5"/>
+
+    <menuitem id="menu_mx_ic_root" name="Control Interno" parent="menu_mx_finance_root" sequence="90"/>
+    <menuitem id="menu_mx_ic_library" name="Librería" parent="menu_mx_ic_root" action="action_mx_control_library" sequence="1"/>
+    <menuitem id="menu_mx_ic_sod" name="SoD" parent="menu_mx_ic_root" action="action_mx_sod_rule" sequence="2"/>
+    <menuitem id="menu_mx_ic_ccm" name="CCM" parent="menu_mx_ic_root" action="action_mx_ccm_alert" sequence="3"/>
+    <menuitem id="menu_mx_ic_cockpit" name="Close cockpit" parent="menu_mx_ic_root" action="action_mx_close_cockpit" sequence="4"/>
+    <menuitem id="menu_mx_ic_audit" name="Auditoría" parent="menu_mx_ic_root" action="action_mx_sat_export_run" sequence="5" groups="mx_finance_core.group_mx_auditor"/>
+</odoo>

@@ -1,0 +1,56 @@
+<odoo>
+    <record id="view_mx_conso_pack_tree" model="ir.ui.view">
+        <field name="name">mx.conso.pack.tree</field>
+        <field name="model">mx.conso.pack</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="group_entity_id"/>
+                <field name="ledger_id"/>
+                <field name="period_key"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_conso_pack" model="ir.actions.act_window">
+        <field name="name">Consolidation Packs</field>
+        <field name="res_model">mx.conso.pack</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_mx_conso_translation_run_tree" model="ir.ui.view">
+        <field name="name">mx.conso.translation.run.tree</field>
+        <field name="model">mx.conso.translation.run</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="period_key"/>
+                <field name="group_currency_id"/>
+                <field name="state"/>
+                <field name="lock_reference"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_conso_translation_run" model="ir.actions.act_window">
+        <field name="name">Consolidation Translation</field>
+        <field name="res_model">mx.conso.translation.run</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_mx_conso_elimination_run_tree" model="ir.ui.view">
+        <field name="name">mx.conso.elimination.run.tree</field>
+        <field name="model">mx.conso.elimination.run</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="period_key"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_conso_elimination_run" model="ir.actions.act_window">
+        <field name="name">Consolidation Eliminations</field>
+        <field name="res_model">mx.conso.elimination.run</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

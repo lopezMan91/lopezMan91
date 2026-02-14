@@ -1,0 +1,23 @@
+<odoo>
+    <record id="view_mx_account_period_lock_tree" model="ir.ui.view">
+        <field name="name">mx.account.period.lock.tree</field>
+        <field name="model">mx.account.period.lock</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="state"/>
+                <field name="approved_by"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_mx_account_period_lock" model="ir.actions.act_window">
+        <field name="name">Period Locks (Range)</field>
+        <field name="res_model">mx.account.period.lock</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

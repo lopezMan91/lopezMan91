@@ -1,0 +1,22 @@
+<odoo>
+    <record id="ledger_local" model="mx.finance.ledger">
+        <field name="name">Local NIF/SAT</field>
+        <field name="code">LOCAL</field>
+        <field name="principle">nif_sat</field>
+    </record>
+    <record id="ledger_ifrs" model="mx.finance.ledger">
+        <field name="name">IFRS</field>
+        <field name="code">IFRS</field>
+        <field name="principle">ifrs</field>
+    </record>
+    <record id="ledger_consol" model="mx.finance.ledger">
+        <field name="name">Consolidation</field>
+        <field name="code">CONSOL</field>
+        <field name="principle">consol</field>
+    </record>
+    <record id="ledger_elim" model="mx.finance.ledger">
+        <field name="name">Eliminations</field>
+        <field name="code">ELIM</field>
+        <field name="principle">elim</field>
+    </record>
+</odoo>

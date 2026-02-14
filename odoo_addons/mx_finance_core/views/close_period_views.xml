@@ -1,0 +1,20 @@
+<odoo>
+    <record id="view_mx_close_period_tree" model="ir.ui.view">
+        <field name="name">mx.close.period.tree</field>
+        <field name="model">mx.close.period</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="ledger_id"/>
+                <field name="period_key"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_mx_close_period" model="ir.actions.act_window">
+        <field name="name">Close Periods</field>
+        <field name="res_model">mx.close.period</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -26,3 +26,4 @@ from . import account_account_extension
 
 from . import account_period_lock
 from . import dimension_set
+from . import ifrs_bridge

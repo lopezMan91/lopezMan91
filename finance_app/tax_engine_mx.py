@@ -6,7 +6,9 @@ from typing import Literal
 
 from .transactions import PolicyLine
 
-IvaRate = Literal[0.0, 0.16]
+IVA_16 = Decimal("0.16")
+IVA_0 = Decimal("0.00")
+IvaRate = Literal["16", "0"]
 IvaKind = Literal["16", "0", "exento", "no_objeto"]
 
 
@@ -47,8 +49,8 @@ class TaxLineAttributes:
             if not 0 <= rate <= 1:
                 raise ValueError("Las tasas de retención deben estar entre 0 y 1")
 
-    def iva_rate(self) -> IvaRate:
-        return 0.16 if self.iva_kind == "16" else 0.0
+    def iva_rate(self) -> Decimal:
+        return IVA_16 if self.iva_kind == "16" else IVA_0
 
 
 @dataclass

@@ -6,7 +6,9 @@ from typing import Literal
 
 from .transactions import PolicyLine
 
-IvaRate = Literal[0.0, 0.16]
+IVA_16 = Decimal("0.16")
+IVA_0 = Decimal("0.00")
+IvaRate = Literal["16", "0"]
 IvaKind = Literal["16", "0", "exento", "no_objeto"]
 
 
@@ -47,8 +49,8 @@ class TaxLineAttributes:
             if not 0 <= rate <= 1:
                 raise ValueError("Las tasas de retención deben estar entre 0 y 1")
 
-    def iva_rate(self) -> IvaRate:
-        return 0.16 if self.iva_kind == "16" else 0.0
+    def iva_rate(self) -> Decimal:
+        return IVA_16 if self.iva_kind == "16" else IVA_0
 
 
 @dataclass
@@ -87,22 +89,22 @@ class TemporaryDifference:
 
 @dataclass
 class ISRReconciliationResult:
-    accounting_profit: float
-    permanent_add_backs: float
-    permanent_deductions: float
-    temporary_add_backs: float
-    temporary_deductions: float
-    taxable_profit: float
+    accounting_profit: Decimal
+    permanent_add_backs: Decimal
+    permanent_deductions: Decimal
+    temporary_add_backs: Decimal
+    temporary_deductions: Decimal
+    taxable_profit: Decimal
 
 
 @dataclass
 class IVASummaryResult:
-    transferred_iva: float
-    creditable_iva: float
-    non_creditable_iva: float
-    withheld_iva: float
-    withheld_isr: float
-    diot_by_vendor: dict[str, float]
+    transferred_iva: Decimal
+    creditable_iva: Decimal
+    non_creditable_iva: Decimal
+    withheld_iva: Decimal
+    withheld_isr: Decimal
+    diot_by_vendor: dict[str, Decimal]
     blocked_lines: list[str]
 
 
@@ -127,12 +129,12 @@ class TaxEngineMX:
         self.rate_provider = rate_provider or TaxRateProvider()
 
     def compute_iva_summary(self, lines: list[FiscalLine]) -> IVASummaryResult:
-        transferred = 0.0
-        creditable = 0.0
-        non_creditable = 0.0
-        withheld_iva = 0.0
-        withheld_isr = 0.0
-        diot: dict[str, float] = {}
+        transferred = Decimal("0.00")
+        creditable = Decimal("0.00")
+        non_creditable = Decimal("0.00")
+        withheld_iva = Decimal("0.00")
+        withheld_isr = Decimal("0.00")
+        diot: dict[str, Decimal] = {}
         blocked: list[str] = []
 
         for line in lines:
@@ -140,27 +142,27 @@ class TaxEngineMX:
             if attrs.iva_kind == "16":
                 rate = self.rate_provider.get_rate("IVA_GENERAL")
             else:
-                rate = Decimal(str(attrs.iva_rate()))
+                rate = attrs.iva_rate()
             line_iva = line.base_amount * rate
 
-            transferred += float(line_iva)
-            withheld_iva += float(line.base_amount * Decimal(str(attrs.withheld_iva_rate)))
-            withheld_isr += float(line.base_amount * Decimal(str(attrs.withheld_isr_rate)))
+            transferred += line_iva
+            withheld_iva += line.base_amount * Decimal(str(attrs.withheld_iva_rate))
+            withheld_isr += line.base_amount * Decimal(str(attrs.withheld_isr_rate))
 
             if attrs.iva_creditable and attrs.evidence.is_complete():
-                creditable += float(line_iva)
-                diot[line.vendor_rfc] = diot.get(line.vendor_rfc, 0.0) + float(line.base_amount)
+                creditable += line_iva
+                diot[line.vendor_rfc] = diot.get(line.vendor_rfc, Decimal("0.00")) + line.base_amount
             else:
-                non_creditable += float(line_iva)
+                non_creditable += line_iva
                 blocked.append(line.line_id)
 
         return IVASummaryResult(
-            transferred_iva=round(transferred, 2),
-            creditable_iva=round(creditable, 2),
-            non_creditable_iva=round(non_creditable, 2),
-            withheld_iva=round(withheld_iva, 2),
-            withheld_isr=round(withheld_isr, 2),
-            diot_by_vendor={k: round(v, 2) for k, v in diot.items()},
+            transferred_iva=transferred.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            creditable_iva=creditable.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            non_creditable_iva=non_creditable.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            withheld_iva=withheld_iva.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            withheld_isr=withheld_isr.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            diot_by_vendor={k: v.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) for k, v in diot.items()},
             blocked_lines=blocked,
         )
 
@@ -172,36 +174,41 @@ class TaxEngineMX:
         temporary_add_backs: float = 0.0,
         temporary_deductions: float = 0.0,
     ) -> ISRReconciliationResult:
+        accounting_profit_d = Decimal(str(accounting_profit))
+        permanent_add_backs_d = Decimal(str(permanent_add_backs))
+        permanent_deductions_d = Decimal(str(permanent_deductions))
+        temporary_add_backs_d = Decimal(str(temporary_add_backs))
+        temporary_deductions_d = Decimal(str(temporary_deductions))
         taxable = (
-            accounting_profit
-            + permanent_add_backs
-            - permanent_deductions
-            + temporary_add_backs
-            - temporary_deductions
+            accounting_profit_d
+            + permanent_add_backs_d
+            - permanent_deductions_d
+            + temporary_add_backs_d
+            - temporary_deductions_d
         )
         return ISRReconciliationResult(
-            accounting_profit=round(accounting_profit, 2),
-            permanent_add_backs=round(permanent_add_backs, 2),
-            permanent_deductions=round(permanent_deductions, 2),
-            temporary_add_backs=round(temporary_add_backs, 2),
-            temporary_deductions=round(temporary_deductions, 2),
-            taxable_profit=round(taxable, 2),
+            accounting_profit=accounting_profit_d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            permanent_add_backs=permanent_add_backs_d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            permanent_deductions=permanent_deductions_d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            temporary_add_backs=temporary_add_backs_d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            temporary_deductions=temporary_deductions_d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            taxable_profit=taxable.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
         )
 
-    def compute_ptu_legal_cap(self, monthly_salary: float, avg_ptu_last_3_years: float) -> float:
+    def compute_ptu_legal_cap(self, monthly_salary: float, avg_ptu_last_3_years: float) -> Decimal:
         if monthly_salary < 0 or avg_ptu_last_3_years < 0:
             raise ValueError("Parámetros PTU no pueden ser negativos")
-        three_months = monthly_salary * float(self.rate_provider.get_rate("PTU_MONTHS_CAP"))
-        return max(three_months, avg_ptu_last_3_years)
+        three_months = Decimal(str(monthly_salary)) * self.rate_provider.get_rate("PTU_MONTHS_CAP")
+        return max(three_months, Decimal(str(avg_ptu_last_3_years))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def compute_ptu_legal_for_employee(
         self,
         proportional_amount: float,
         monthly_salary: float,
         avg_ptu_last_3_years: float,
-    ) -> float:
+    ) -> Decimal:
         cap = self.compute_ptu_legal_cap(monthly_salary, avg_ptu_last_3_years)
-        return round(min(proportional_amount, cap), 2)
+        return min(Decimal(str(proportional_amount)), cap).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def compute_deferred_tax_totals(self, differences: list[TemporaryDifference]) -> dict[str, float]:
         dta = 0.0

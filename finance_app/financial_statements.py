@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from .transactions import TransactionManager
 
@@ -12,13 +13,13 @@ class FinancialStatements:
     manager: TransactionManager
 
     def _sum_category_prefix(self, prefix: str) -> float:
-        total = 0.0
+        total = Decimal("0.00")
         target = prefix.lower().strip()
         for transaction in self.manager.transactions:
             category = transaction.category.lower().strip()
             if category.startswith(target):
-                total += transaction.amount
-        return total
+                total += Decimal(str(transaction.amount))
+        return float(total)
 
     def income_statement(self) -> dict[str, float]:
         revenues = self._sum_category_prefix("revenue") + self._sum_category_prefix("ingreso")

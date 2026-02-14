@@ -87,8 +87,8 @@ class AccountMove(models.Model):
         try:
             from finance_app.gaap_router import AccountingStandard, GAAPRouter
             from finance_app.tax_engine_mx import TaxRateProvider
-        except Exception:
-            return
+        except Exception as exc:
+            raise ValidationError("Error crítico de integridad: Motor financiero no disponible.") from exc
 
         standard_map = {
             "ifrs": AccountingStandard.IFRS,
@@ -107,8 +107,11 @@ class AccountMove(models.Model):
             if not router.can_revalue_asset() and any((line.name or "").lower().find("revalu") >= 0 for line in move.line_ids):
                 raise ValidationError("La revaluación no está permitida para la norma activa del ledger.")
 
-            # Resolve tax rate from provider placeholder (ready for DB-backed provider).
-            provider = TaxRateProvider()
+            # Resolve tax rate from Odoo configuration; fail hard if missing.
+            tax = self.env["account.tax"].search([("type_tax_use", "in", ["sale", "purchase"])], limit=1)
+            if not tax:
+                raise ValidationError("No existe configuración de account.tax para validar tasas.")
+            provider = TaxRateProvider(rates={"IVA_GENERAL": Decimal(str(tax.amount)) / Decimal("100")})
             _ = provider.get_rate("IVA_GENERAL", as_of=str(move.date))
 
 

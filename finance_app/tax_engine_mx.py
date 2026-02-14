@@ -56,10 +56,11 @@ class FiscalLine:
     line_id: str
     vendor_rfc: str
     concept: str
-    base_amount: float
+    base_amount: Decimal
     attrs: TaxLineAttributes
 
     def __post_init__(self):
+        self.base_amount = Decimal(str(self.base_amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         if self.base_amount < 0:
             raise ValueError("base_amount no puede ser negativo")
         if not self.line_id:
@@ -116,12 +117,9 @@ class TaxRateProvider:
     def get_rate(self, code: str, as_of: str | None = None) -> Decimal:
         _ = as_of
         configured = self.rates or {}
-        default_rates = {
-            "IVA_GENERAL": Decimal("0.16"),
-            "ISR_CORPORATE": Decimal("0.30"),
-            "PTU_MONTHS_CAP": Decimal("3"),
-        }
-        return configured.get(code, default_rates[code])
+        if code not in configured:
+            raise ValueError(f"Tasa de impuesto no configurada: {code}")
+        return Decimal(str(configured[code]))
 
 
 class TaxEngineMX:
@@ -140,20 +138,20 @@ class TaxEngineMX:
         for line in lines:
             attrs = line.attrs
             if attrs.iva_kind == "16":
-                rate = float(self.rate_provider.get_rate("IVA_GENERAL"))
+                rate = self.rate_provider.get_rate("IVA_GENERAL")
             else:
-                rate = attrs.iva_rate()
+                rate = Decimal(str(attrs.iva_rate()))
             line_iva = line.base_amount * rate
 
-            transferred += line_iva
-            withheld_iva += line.base_amount * attrs.withheld_iva_rate
-            withheld_isr += line.base_amount * attrs.withheld_isr_rate
+            transferred += float(line_iva)
+            withheld_iva += float(line.base_amount * Decimal(str(attrs.withheld_iva_rate)))
+            withheld_isr += float(line.base_amount * Decimal(str(attrs.withheld_isr_rate)))
 
             if attrs.iva_creditable and attrs.evidence.is_complete():
-                creditable += line_iva
-                diot[line.vendor_rfc] = diot.get(line.vendor_rfc, 0.0) + line.base_amount
+                creditable += float(line_iva)
+                diot[line.vendor_rfc] = diot.get(line.vendor_rfc, 0.0) + float(line.base_amount)
             else:
-                non_creditable += line_iva
+                non_creditable += float(line_iva)
                 blocked.append(line.line_id)
 
         return IVASummaryResult(

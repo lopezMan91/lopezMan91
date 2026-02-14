@@ -46,8 +46,11 @@ class FinancialTransaction:
 class Transaction:
     date: str
     description: str
-    amount: float
+    amount: Decimal
     category: str
+
+    def __post_init__(self):
+        self.amount = _to_decimal(self.amount)
 
 
 @dataclass
@@ -56,14 +59,14 @@ class PolicyLine:
     date: str
     description: str
     account: str
-    debit: float
-    credit: float
+    debit: Decimal
+    credit: Decimal
     category: str = "poliza"
     is_accrual: bool = False
     reversal_date: Optional[str] = None
 
-    def signed_amount(self) -> float:
-        return float(_to_decimal(self.debit) - _to_decimal(self.credit))
+    def signed_amount(self) -> Decimal:
+        return _to_decimal(self.debit) - _to_decimal(self.credit)
 
 
 @dataclass
@@ -99,7 +102,7 @@ class TransactionManager:
                 self.add_transaction(Transaction(
                     date=line.date,
                     description=f"{line.description} [{policy_id}/{line.account}]",
-                    amount=line.signed_amount(),
+                    amount=_to_decimal(line.signed_amount()),
                     category=f"{line.category}:{line.account}",
                 ))
 
@@ -128,6 +131,6 @@ class TransactionManager:
                 self.add_transaction(Transaction(
                     date=row['date'],
                     description=row['description'],
-                    amount=float(row['amount']),
+                    amount=_to_decimal(row['amount']),
                     category=row.get('category', '')
                 ))

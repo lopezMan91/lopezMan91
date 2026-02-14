@@ -17,7 +17,7 @@ from finance_app.tax_engine_mx import (
 
 class TaxEngineMXTests(unittest.TestCase):
     def setUp(self):
-        self.engine = TaxEngineMX()
+        self.engine = TaxEngineMX(rate_provider=TaxRateProvider(rates={"IVA_GENERAL": Decimal("0.16"), "ISR_CORPORATE": Decimal("0.30"), "PTU_MONTHS_CAP": Decimal("3")}))
 
     def test_iva_summary_with_blocked_lines_and_diot(self):
         complete = TaxEvidencePack(xml_attached=True, pdf_attached=True, payment_proof_attached=True)
@@ -27,7 +27,7 @@ class TaxEngineMXTests(unittest.TestCase):
                 line_id="L1",
                 vendor_rfc="AAA010101AAA",
                 concept="Servicio gravado",
-                base_amount=1000,
+                base_amount=Decimal("1000"),
                 attrs=TaxLineAttributes(
                     iva_kind="16",
                     iva_creditable=True,
@@ -40,7 +40,7 @@ class TaxEngineMXTests(unittest.TestCase):
                 line_id="L2",
                 vendor_rfc="BBB010101BBB",
                 concept="Servicio sin evidencia completa",
-                base_amount=500,
+                base_amount=Decimal("500"),
                 attrs=TaxLineAttributes(
                     iva_kind="16",
                     iva_creditable=True,
@@ -114,7 +114,7 @@ class TaxEngineMXTests(unittest.TestCase):
                 line_id="L1",
                 vendor_rfc="AAA010101AAA",
                 concept="Servicio gravado",
-                base_amount=1000,
+                base_amount=Decimal("1000"),
                 attrs=TaxLineAttributes(iva_kind="16", iva_creditable=True, evidence=complete),
             )
         ]

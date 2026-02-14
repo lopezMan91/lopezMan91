@@ -14,7 +14,9 @@ from .fiscal_compliance import FiscalDocument, FiscalVault
 from .report_builder import FinancialStatementBuilder, ReportingTemplate, default_templates
 from .control_framework import ControlLibrary, Control, SODRule, default_control_library
 from .reconciliation import ReconciliationItem, ReconciliationWorkflow
+from .reconciliation import BankStatementLine, LedgerLine, ReconciliationMatch, suggest_fuzzy_matches
 from .journal_importer import JournalImportStaging, JournalTemplateImporter
+from .smart_classification import ClassificationSuggestion, suggest_account_and_cost_center
 from .tax_engine_mx import (
     FiscalLine,
     ISRReconciliationResult,
@@ -90,6 +92,12 @@ __all__ = [
     "default_control_library",
     "ReconciliationItem",
     "ReconciliationWorkflow",
+    "BankStatementLine",
+    "LedgerLine",
+    "ReconciliationMatch",
+    "suggest_fuzzy_matches",
+    "ClassificationSuggestion",
+    "suggest_account_and_cost_center",
     "JournalImportStaging",
     "JournalTemplateImporter",
     "LeaseAmortizationLine",

@@ -12,6 +12,8 @@ class FiscalDocument:
     total: float
     xml_content: str
     sat_status: str = "vigente"
+    listed_in_lco: bool = True
+    listed_in_efos: bool = False
 
     @property
     def xml_hash(self) -> str:
@@ -49,6 +51,10 @@ class FiscalVault:
                 continue
             if document.sat_status.lower() != "vigente":
                 issues.append(f"CFDI {link.uuid} en estatus {document.sat_status}")
+            if not document.listed_in_lco:
+                issues.append(f"CFDI {link.uuid} emisor fuera de LCO")
+            if document.listed_in_efos:
+                issues.append(f"CFDI {link.uuid} emisor listado EFOS")
 
         if not linked_policy_ids:
             issues.append("No hay pólizas ligadas a UUID")

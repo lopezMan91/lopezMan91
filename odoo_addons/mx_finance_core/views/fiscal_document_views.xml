@@ -10,6 +10,9 @@
                 <field name="rfc_receptor"/>
                 <field name="total"/>
                 <field name="sat_status"/>
+                <field name="lco_status"/>
+                <field name="efos_status"/>
+                <field name="compliance_blocked"/>
                 <field name="event_id"/>
                 <field name="move_id"/>
             </tree>

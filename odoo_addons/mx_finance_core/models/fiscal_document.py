@@ -18,6 +18,17 @@ class MxFiscalDocument(models.Model):
         ("cancelado", "Cancelado"),
         ("no_encontrado", "No encontrado"),
     ], default="vigente", required=True)
+    lco_status = fields.Selection([
+        ("listed", "Listed"),
+        ("not_listed", "Not Listed"),
+        ("unknown", "Unknown"),
+    ], default="unknown", required=True)
+    efos_status = fields.Selection([
+        ("clean", "Clean"),
+        ("listed", "Listed"),
+        ("unknown", "Unknown"),
+    ], default="unknown", required=True)
+    compliance_blocked = fields.Boolean(compute="_compute_compliance_blocked", store=True)
     event_id = fields.Many2one("mx.accounting.event")
     move_id = fields.Many2one("account.move")
 
@@ -27,3 +38,12 @@ class MxFiscalDocument(models.Model):
         for rec in records:
             rec.xml_hash = f"{rec.uuid}:{rec.total}:{rec.rfc_emisor}"
         return records
+
+    @api.depends("sat_status", "lco_status", "efos_status")
+    def _compute_compliance_blocked(self):
+        for rec in self:
+            rec.compliance_blocked = (
+                rec.sat_status != "vigente"
+                or rec.lco_status != "listed"
+                or rec.efos_status == "listed"
+            )

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from hashlib import sha256
 from typing import Any
 
 from .transactions import PolicyLine, Transaction, TransactionManager
@@ -50,6 +51,7 @@ class JournalEntry:
     event_id: str
     policy_id: str
     lines: list[JournalLine]
+    integrity_hash: str = ""
 
 
 @dataclass
@@ -113,6 +115,13 @@ class AccountingEngine:
                 event_id=event.event_id,
                 policy_id=policy_id,
                 lines=entry_lines,
+                integrity_hash=_entry_integrity_hash(
+                    f"JE-{len(self.entries) + 1:05d}",
+                    event.company,
+                    policy.ledger_code,
+                    event.event_id,
+                    entry_lines,
+                ),
             ))
             run.logs.append(f"Generada póliza {policy_id} en {policy.ledger_code}")
 
@@ -133,3 +142,27 @@ def _eval_amount(expr: str, payload: dict[str, Any]) -> float:
 def drilldown_for_ledger(transactions: list[Transaction], ledger_code: str) -> list[Transaction]:
     prefix = f"ledger_{ledger_code.lower()}"
     return [t for t in transactions if t.category.startswith(prefix)]
+
+
+def _entry_integrity_hash(
+    entry_id: str,
+    company: str,
+    ledger_code: str,
+    event_id: str,
+    lines: list[JournalLine],
+) -> str:
+    base = [entry_id, company, ledger_code, event_id]
+    for line in lines:
+        base.append(f"{line.account}|{line.debit:.2f}|{line.credit:.2f}|{line.description}")
+    return sha256("||".join(base).encode("utf-8")).hexdigest()
+
+
+def verify_entry_integrity(entry: JournalEntry) -> bool:
+    expected = _entry_integrity_hash(
+        entry.entry_id,
+        entry.company,
+        entry.ledger_code,
+        entry.event_id,
+        entry.lines,
+    )
+    return expected == entry.integrity_hash

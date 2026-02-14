@@ -239,3 +239,13 @@ python scripts/stress_test_journal_import.py --entries 50000
 - `lease_engine` ahora usa `Decimal` internamente para cálculos de VP/amortización y expone `validate_schedule_consistency` para control de cierre anual.
 - `notifications.notify` migra fallback de `print()` a `logging` estructurado para trazabilidad en entornos headless.
 - Se agregaron pruebas para detectar inconsistencias en la tabla de amortización (`tests/test_lease_engine.py`).
+
+
+## Compliance y automatización avanzada (incremental)
+
+- **Fiscal Vault reforzado**: `FiscalDocument` ahora contempla banderas LCO/EFOS para bloquear CFDI de riesgo durante gates de cierre.
+- **Integridad de pólizas**: `JournalEntry` incluye hash de integridad y helper `verify_entry_integrity` para detectar alteraciones.
+- **Conciliación inteligente**: `suggest_fuzzy_matches` combina similitud de descripción + tolerancia de monto para sugerir conciliaciones bancarias.
+- **Sugerencia NLP heurística**: `suggest_account_and_cost_center` propone cuenta/centro de costo por palabras clave (con confianza y justificación).
+
+> Nota: SSO (Azure AD / Google Workspace) y MFA deben implementarse en la capa de despliegue/autenticación (Odoo auth/provider) y no en estos módulos puros de dominio.

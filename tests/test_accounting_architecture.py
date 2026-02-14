@@ -1,6 +1,6 @@
 import unittest
 
-from finance_app.accounting_core import AccountingEngine, AccountingPolicy, BusinessEvent
+from finance_app.accounting_core import AccountingEngine, AccountingPolicy, BusinessEvent, verify_entry_integrity
 from finance_app.control_framework import default_control_library
 from finance_app.fiscal_compliance import FiscalDocument, FiscalVault
 from finance_app.reconciliation import ReconciliationItem, ReconciliationWorkflow
@@ -48,7 +48,12 @@ class AccountingArchitectureTests(unittest.TestCase):
 
         self.assertEqual(run.event_id, "EV-001")
         self.assertEqual(len(engine.entries), 2)
+        self.assertTrue(all(verify_entry_integrity(entry) for entry in engine.entries))
         self.assertEqual(len(manager.transactions), 5)
+
+        # Tamper detection check.
+        engine.entries[0].lines[0].debit += 1
+        self.assertFalse(verify_entry_integrity(engine.entries[0]))
 
     def test_fiscal_vault_gates(self):
         vault = FiscalVault()
@@ -62,6 +67,23 @@ class AccountingArchitectureTests(unittest.TestCase):
         ))
         vault.link_policy_uuid("EV-001-LOCAL", "UUID-1", "EV-001")
         self.assertEqual(vault.verify_closing_gates(), [])
+
+    def test_fiscal_vault_lco_efos_gates(self):
+        vault = FiscalVault()
+        vault.ingest_document(FiscalDocument(
+            uuid="UUID-2",
+            rfc_emisor="CCC010101CCC",
+            rfc_receptor="DDD010101DDD",
+            total=100,
+            xml_content="<cfdi>risk</cfdi>",
+            sat_status="vigente",
+            listed_in_lco=False,
+            listed_in_efos=True,
+        ))
+        vault.link_policy_uuid("EV-009-LOCAL", "UUID-2", "EV-009")
+        issues = vault.verify_closing_gates()
+        self.assertTrue(any("LCO" in issue for issue in issues))
+        self.assertTrue(any("EFOS" in issue for issue in issues))
 
     def test_reporting_and_controls_and_reconciliation(self):
         manager = TransactionManager()

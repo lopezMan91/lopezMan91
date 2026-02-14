@@ -85,8 +85,8 @@ class AccountMove(models.Model):
     def _run_financial_compliance_checks(self):
         """Bridge Odoo posting with finance engines (single source of truth)."""
         try:
-            from finance_app.gaap_router import AccountingStandard, GAAPRouter
-            from finance_app.tax_engine_mx import TaxRateProvider
+            from ..libs.finance_app.gaap_router import AccountingStandard, GAAPRouter
+            from ..libs.finance_app.tax_engine_mx import TaxRateProvider
         except Exception as exc:
             raise ValidationError("Error crítico de integridad: Motor financiero no disponible.") from exc
 

@@ -34,6 +34,7 @@ class LeaseEngineTests(unittest.TestCase):
 
         snap = engine.initial_measurement(contract, rate, "2026-01-01")
         schedule = engine.amortization_schedule(contract, snap, rate)
+        engine.validate_schedule_consistency(snap, schedule)
         batch = engine.post_period(contract, schedule[0], "IFRS")
 
         self.assertGreater(snap.lease_liability_pv, 0)
@@ -72,6 +73,33 @@ class LeaseEngineTests(unittest.TestCase):
         new_snap = remeasure_contract(engine, contract, rate, mod)
         self.assertEqual(new_snap.remeasurement_reason, "index_change")
         self.assertGreater(new_snap.lease_liability_pv, 0)
+
+    def test_schedule_consistency_detects_mismatch(self):
+        manager = TransactionManager()
+        engine = LeaseEngine(manager)
+
+        contract = LeaseContract(
+            contract_id="LEASE-003",
+            company="MX01",
+            ledger_policy_ids=["IFRS"],
+            counterparty="ARRENDADORA SA",
+            asset_class="equipo",
+            commencement_date="2026-01-01",
+            end_date="2026-12-31",
+            payments=[
+                LeasePaymentSchedule("2026-01-31", 1000, "MXN"),
+                LeasePaymentSchedule("2026-02-28", 1000, "MXN"),
+            ],
+        )
+        rate = LeaseDiscountRate("IBR", "MXN", 12, 0.12, "treasury", "2026-01-01")
+
+        snap = engine.initial_measurement(contract, rate, "2026-01-01")
+        schedule = engine.amortization_schedule(contract, snap, rate)
+        # Introduce a manual corruption.
+        schedule[-1].closing_liability += 100
+
+        with self.assertRaises(ValueError):
+            engine.validate_schedule_consistency(snap, schedule)
 
 
 if __name__ == "__main__":

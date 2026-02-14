@@ -232,3 +232,10 @@ Ejemplo:
 ```bash
 python scripts/stress_test_journal_import.py --entries 50000
 ```
+
+
+## Endurecimiento reciente (precisión, logging y controles)
+
+- `lease_engine` ahora usa `Decimal` internamente para cálculos de VP/amortización y expone `validate_schedule_consistency` para control de cierre anual.
+- `notifications.notify` migra fallback de `print()` a `logging` estructurado para trazabilidad en entornos headless.
+- Se agregaron pruebas para detectar inconsistencias en la tabla de amortización (`tests/test_lease_engine.py`).

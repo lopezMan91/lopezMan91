@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 
 from .transactions import PolicyLine, TransactionManager
@@ -83,10 +83,32 @@ class LeasePostingBatch:
 
 
 class LeaseEngine:
+    """Lease measurement engine aligned to IFRS 16 / NIF D-5 operational flow.
+
+    The engine keeps calculation paths deterministic and quantized to 2 decimals
+    for posting output while using Decimal internally to reduce floating-point drift.
+    """
+
+    _Q = Decimal("0.01")
+
     def __init__(self, manager: TransactionManager):
         self.manager = manager
 
+    @classmethod
+    def _to_decimal(cls, value: float | str | Decimal) -> Decimal:
+        return Decimal(str(value)).quantize(cls._Q, rounding=ROUND_HALF_UP)
+
+    @classmethod
+    def _quantize(cls, value: Decimal) -> Decimal:
+        return value.quantize(cls._Q, rounding=ROUND_HALF_UP)
+
     def validate_contract(self, contract: LeaseContract, rate: LeaseDiscountRate):
+        """Validate core lease inputs before recognition.
+
+        Technical reference:
+        - IFRS 16 initial measurement of lease liability (PV of lease payments)
+        - NIF D-5 aligned operational validation for payable schedule and discount rate.
+        """
         if not contract.payments:
             raise ValueError("Contrato sin calendario de pagos")
         if rate.annual_rate <= 0:
@@ -106,14 +128,24 @@ class LeaseEngine:
         at_date: str,
         reason: str = "day1",
     ) -> LeaseMeasurementSnapshot:
-        self.validate_contract(contract, rate)
-        included_payments = [p.amount for p in contract.payments if not p.variable_flag]
-        monthly_rate = rate.annual_rate / 12
-        pv = 0.0
-        for i, amount in enumerate(included_payments, start=1):
-            pv += amount / ((1 + monthly_rate) ** i)
+        """Compute day-1 lease liability PV and ROU asset.
 
-        rou = pv + contract.prepayments + contract.initial_direct_costs - contract.incentives + contract.restoration_provision
+        Uses Decimal arithmetic to reduce precision drift in long schedules.
+        """
+        self.validate_contract(contract, rate)
+        included_payments = [self._to_decimal(p.amount) for p in contract.payments if not p.variable_flag]
+        monthly_rate = Decimal(str(rate.annual_rate)) / Decimal("12")
+        pv = Decimal("0")
+        for i, amount in enumerate(included_payments, start=1):
+            pv += amount / ((Decimal("1") + monthly_rate) ** i)
+
+        rou = (
+            pv
+            + Decimal(str(contract.prepayments))
+            + Decimal(str(contract.initial_direct_costs))
+            - Decimal(str(contract.incentives))
+            + Decimal(str(contract.restoration_provision))
+        )
         assumptions_hash = (
             f"{contract.contract_id}|{rate.rate_type}|{rate.annual_rate}|{len(contract.payments)}|"
             f"{contract.short_term_exemption}|{contract.low_value_exemption}"
@@ -121,8 +153,8 @@ class LeaseEngine:
         return LeaseMeasurementSnapshot(
             contract_id=contract.contract_id,
             at_date=at_date,
-            lease_liability_pv=round(pv, 2),
-            rou_asset=round(rou, 2),
+            lease_liability_pv=float(self._quantize(pv)),
+            rou_asset=float(self._quantize(rou)),
             remeasurement_reason=reason,
             assumptions_hash=assumptions_hash,
         )
@@ -137,27 +169,51 @@ class LeaseEngine:
         if periods == 0:
             return []
 
-        monthly_rate = rate.annual_rate / 12
-        depreciation = snapshot.rou_asset / periods
-        liability = snapshot.lease_liability_pv
-        rou_balance = snapshot.rou_asset
+        monthly_rate = Decimal(str(rate.annual_rate)) / Decimal("12")
+        depreciation = Decimal(str(snapshot.rou_asset)) / Decimal(str(periods))
+        liability = Decimal(str(snapshot.lease_liability_pv))
+        rou_balance = Decimal(str(snapshot.rou_asset))
         lines: list[LeaseAmortizationLine] = []
 
         for idx, payment in enumerate(contract.payments, start=1):
             interest = liability * monthly_rate
-            closing = liability + interest - payment.amount
-            rou_balance = max(rou_balance - depreciation, 0)
+            closing = liability + interest - Decimal(str(payment.amount))
+            rou_balance = max(rou_balance - depreciation, Decimal("0"))
             lines.append(LeaseAmortizationLine(
                 period=f"P{idx:03d}",
-                opening_liability=round(liability, 2),
-                interest=round(interest, 2),
-                payment=round(payment.amount, 2),
-                closing_liability=round(closing, 2),
-                depreciation=round(depreciation, 2),
-                rou_closing=round(rou_balance, 2),
+                opening_liability=float(self._quantize(liability)),
+                interest=float(self._quantize(interest)),
+                payment=float(self._quantize(Decimal(str(payment.amount)))),
+                closing_liability=float(self._quantize(closing)),
+                depreciation=float(self._quantize(depreciation)),
+                rou_closing=float(self._quantize(rou_balance)),
             ))
             liability = closing
         return lines
+
+    def validate_schedule_consistency(
+        self,
+        snapshot: LeaseMeasurementSnapshot,
+        schedule: list[LeaseAmortizationLine],
+        tolerance: float = 0.05,
+    ) -> None:
+        """Ensure schedule remains consistent with day-1 measurement.
+
+        This is a practical QA control for year-end close:
+        Opening liability (day-1 PV) should reconcile against cumulative
+        interest/payment movement within tolerance.
+        """
+        if not schedule:
+            return
+        start = Decimal(str(snapshot.lease_liability_pv))
+        end = Decimal(str(schedule[-1].closing_liability))
+        total_interest = sum(Decimal(str(l.interest)) for l in schedule)
+        total_payment = sum(Decimal(str(l.payment)) for l in schedule)
+        expected_end = self._quantize(start + total_interest - total_payment)
+        if abs(expected_end - end) > Decimal(str(tolerance)):
+            raise ValueError(
+                f"Inconsistencia de tabla de amortización: cierre esperado={expected_end} cierre_observado={end}"
+            )
 
     def post_period(
         self,

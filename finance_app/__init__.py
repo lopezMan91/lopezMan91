@@ -76,6 +76,7 @@ from .lease_engine import (
     LeaseModification,
     LeasePaymentSchedule,
     LeasePostingBatch,
+    recalculate_lease_liability,
     remeasure_contract,
 )
 
@@ -138,6 +139,7 @@ __all__ = [
     "LeaseModification",
     "LeasePaymentSchedule",
     "LeasePostingBatch",
+    "recalculate_lease_liability",
     "remeasure_contract",
     "FiscalLine",
     "TaxLineAttributes",

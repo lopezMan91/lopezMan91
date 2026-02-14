@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -76,7 +78,39 @@ class AccountMove(models.Model):
 
     def action_post(self):
         self._check_period_lock()
+        self._run_financial_compliance_checks()
         return super().action_post()
+
+
+    def _run_financial_compliance_checks(self):
+        """Bridge Odoo posting with finance engines (single source of truth)."""
+        try:
+            from finance_app.gaap_router import AccountingStandard, GAAPRouter
+            from finance_app.tax_engine_mx import TaxRateProvider
+        except Exception:
+            return
+
+        standard_map = {
+            "ifrs": AccountingStandard.IFRS,
+            "nif_sat": AccountingStandard.NIF_MX,
+            "fiscal": AccountingStandard.NIF_MX,
+            "consol": AccountingStandard.IFRS,
+            "elim": AccountingStandard.IFRS,
+        }
+
+        for move in self:
+            principle = (move.mx_ledger_id.principle or "").lower()
+            standard = standard_map.get(principle, AccountingStandard.NIF_MX)
+            router = GAAPRouter(standard)
+
+            # Prevent upward revaluation entries in standards where it is forbidden.
+            if not router.can_revalue_asset() and any((line.name or "").lower().find("revalu") >= 0 for line in move.line_ids):
+                raise ValidationError("La revaluación no está permitida para la norma activa del ledger.")
+
+            # Resolve tax rate from provider placeholder (ready for DB-backed provider).
+            provider = TaxRateProvider()
+            _ = provider.get_rate("IVA_GENERAL", as_of=str(move.date))
+
 
 
     def write(self, vals):

@@ -285,3 +285,21 @@ def remeasure_contract(
 ) -> LeaseMeasurementSnapshot:
     updated = LeaseContract(**{**contract.__dict__, "payments": modification.new_payments})
     return engine.initial_measurement(updated, rate, modification.effective_date, reason=modification.reason)
+
+
+def recalculate_lease_liability(
+    engine: LeaseEngine,
+    contract: LeaseContract,
+    new_rate: LeaseDiscountRate,
+    new_payments: list[LeasePaymentSchedule],
+    effective_date: str,
+    reason: str = "ifrs16_modification",
+) -> LeaseMeasurementSnapshot:
+    """Recalculate lease liability/ROU for IFRS16 modifications without deleting history."""
+    modification = LeaseModification(
+        contract_id=contract.contract_id,
+        reason=reason,
+        effective_date=effective_date,
+        new_payments=new_payments,
+    )
+    return remeasure_contract(engine, contract, new_rate, modification)

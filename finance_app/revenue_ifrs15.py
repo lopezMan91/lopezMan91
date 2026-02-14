@@ -56,6 +56,38 @@ class ContractRollforward:
 
 
 class RevenueEngineIFRS15:
+    def estimate_variable_consideration(
+        self,
+        scenarios: list[tuple[float, float]],
+        method: Literal["expected_value", "most_likely"] = "expected_value",
+        constraint: float = 0.0,
+    ) -> float:
+        """Estimate variable consideration with optional constraint.
+
+        scenarios: list of tuples (amount, probability).
+        """
+        if not scenarios:
+            return 0.0
+        if method == "expected_value":
+            estimate = sum(amount * prob for amount, prob in scenarios)
+        else:
+            estimate = max(scenarios, key=lambda x: x[1])[0]
+        return round(max(estimate - constraint, 0.0), 2)
+
+    def split_significant_financing_component(
+        self,
+        cash_price: float,
+        deferred_price: float,
+    ) -> dict[str, float]:
+        """Split revenue vs financing component for long-term settlements."""
+        if cash_price < 0 or deferred_price < 0:
+            raise ValueError("Precios no pueden ser negativos")
+        financing = max(deferred_price - cash_price, 0.0)
+        return {
+            "revenue_component": round(cash_price, 2),
+            "financing_component": round(financing, 2),
+        }
+
     def allocate_transaction_price(self, contract: RevenueContract) -> dict[str, float]:
         total_ssp = sum(p.standalone_selling_price for p in contract.pobs)
         if total_ssp <= 0:

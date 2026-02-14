@@ -258,3 +258,18 @@ python scripts/stress_test_journal_import.py --entries 50000
 - **Asiento automático de impuesto diferido** (`TaxEngineMX.build_deferred_tax_policy_lines`) para diferencias temporales (NIF D-4 / IAS 12).
 - **Hard close con llave hash** en `mx.close.period` y método de reapertura con validación de clave.
 - **Ghost transaction detector** en `account.move` para localizar pólizas LOCAL posteadas sin UUID y no marcadas como accrual/reclass.
+
+
+## Cockpit UI MVP (Streamlit)
+
+Se añadió un prototipo de interfaz web para conciliación/cumplimiento:
+
+- `scripts/streamlit_financial_cockpit.py`
+
+Ejecución:
+
+```bash
+streamlit run scripts/streamlit_financial_cockpit.py
+```
+
+Este MVP presenta métricas de integridad, alertas de cierre y conciliación contable-fiscal en una vista tipo dashboard.

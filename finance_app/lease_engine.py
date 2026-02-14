@@ -63,6 +63,14 @@ class LeaseMeasurementSnapshot:
 
 
 @dataclass
+class LeaseRemeasurementResult:
+    previous_snapshot: LeaseMeasurementSnapshot
+    new_snapshot: LeaseMeasurementSnapshot
+    delta_liability: float
+    delta_rou_asset: float
+
+
+@dataclass
 class LeaseAmortizationLine:
     period: str
     opening_liability: float
@@ -214,6 +222,22 @@ class LeaseEngine:
             raise ValueError(
                 f"Inconsistencia de tabla de amortización: cierre esperado={expected_end} cierre_observado={end}"
             )
+
+    def remeasure_with_history(
+        self,
+        contract: LeaseContract,
+        previous_snapshot: LeaseMeasurementSnapshot,
+        rate: LeaseDiscountRate,
+        modification: "LeaseModification",
+    ) -> LeaseRemeasurementResult:
+        """Remeasure lease while preserving historical snapshot for audit trail."""
+        new_snapshot = remeasure_contract(self, contract, rate, modification)
+        return LeaseRemeasurementResult(
+            previous_snapshot=previous_snapshot,
+            new_snapshot=new_snapshot,
+            delta_liability=round(new_snapshot.lease_liability_pv - previous_snapshot.lease_liability_pv, 2),
+            delta_rou_asset=round(new_snapshot.rou_asset - previous_snapshot.rou_asset, 2),
+        )
 
     def post_period(
         self,

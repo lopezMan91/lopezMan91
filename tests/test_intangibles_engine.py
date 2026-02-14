@@ -81,6 +81,23 @@ class IntangiblesEngineTests(unittest.TestCase):
         self.assertEqual(self.engine.classify_saas_or_website_cost(True, False), "capitalize")
         self.assertEqual(self.engine.classify_saas_or_website_cost(True, True), "expense")
 
+    def test_indefinite_life_impairment_flow(self):
+        asset = IntangibleAsset(
+            asset_id="INT-003",
+            name="Marca",
+            entity="MX01",
+            profit_center="PC03",
+            project="PRJ-BRAND",
+            currency="MXN",
+            useful_life_months=None,
+            gross_carrying_amount=5000,
+        )
+
+        self.assertTrue(asset.requires_annual_impairment_test())
+        self.assertEqual(self.engine.amortization_for_period(asset), 0.0)
+        impairment = self.engine.run_annual_impairment_test(asset, recoverable_amount=4200)
+        self.assertEqual(impairment, 800.0)
+
 
 if __name__ == "__main__":
     unittest.main()

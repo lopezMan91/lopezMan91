@@ -70,6 +70,10 @@ class IntangibleAsset:
     def is_indefinite_life(self) -> bool:
         return self.useful_life_months is None
 
+    def requires_annual_impairment_test(self) -> bool:
+        """Indefinite-life intangibles are not amortized and require impairment testing."""
+        return self.is_indefinite_life
+
     @property
     def carrying_amount(self) -> float:
         return round(self.gross_carrying_amount - self.accumulated_amortization - self.accumulated_impairment, 2)
@@ -140,6 +144,16 @@ class IntangiblesEngine:
         if amount < 0:
             raise ValueError("Impairment no puede ser negativo")
         asset.accumulated_impairment += amount
+
+    def run_annual_impairment_test(self, asset: IntangibleAsset, recoverable_amount: float) -> float:
+        """Run impairment test for indefinite-life intangibles (IAS 36 / NIF C-15 alignment)."""
+        if recoverable_amount < 0:
+            raise ValueError("recoverable_amount no puede ser negativo")
+        carrying = asset.carrying_amount
+        impairment = max(carrying - recoverable_amount, 0.0)
+        if impairment > 0:
+            self.post_impairment(asset, impairment)
+        return round(impairment, 2)
 
     def simulate_amortization_schedule(self, asset: IntangibleAsset, periods: int) -> list[float]:
         if periods <= 0:

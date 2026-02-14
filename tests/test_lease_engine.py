@@ -4,6 +4,7 @@ from finance_app.lease_engine import (
     LeaseContract,
     LeaseDiscountRate,
     LeaseEngine,
+    LeaseRemeasurementResult,
     LeaseModification,
     LeasePaymentSchedule,
     remeasure_contract,
@@ -100,6 +101,42 @@ class LeaseEngineTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             engine.validate_schedule_consistency(snap, schedule)
+
+    def test_remeasurement_with_history(self):
+        manager = TransactionManager()
+        engine = LeaseEngine(manager)
+
+        contract = LeaseContract(
+            contract_id="LEASE-004",
+            company="MX01",
+            ledger_policy_ids=["IFRS"],
+            counterparty="ARRENDADORA SA",
+            asset_class="inmuebles",
+            commencement_date="2026-01-01",
+            end_date="2026-12-31",
+            initial_direct_costs=150,
+            payments=[
+                LeasePaymentSchedule("2026-01-31", 2500, "MXN"),
+                LeasePaymentSchedule("2026-02-28", 2500, "MXN"),
+            ],
+        )
+        rate = LeaseDiscountRate("IBR", "MXN", 12, 0.10, "treasury", "2026-01-01")
+        previous = engine.initial_measurement(contract, rate, "2026-01-01")
+        mod = LeaseModification(
+            contract_id="LEASE-004",
+            reason="extension",
+            effective_date="2026-03-01",
+            new_payments=[
+                LeasePaymentSchedule("2026-03-31", 2700, "MXN"),
+                LeasePaymentSchedule("2026-04-30", 2700, "MXN"),
+                LeasePaymentSchedule("2026-05-31", 2700, "MXN"),
+            ],
+        )
+
+        result = engine.remeasure_with_history(contract, previous, rate, mod)
+        self.assertIsInstance(result, LeaseRemeasurementResult)
+        self.assertEqual(result.previous_snapshot.contract_id, "LEASE-004")
+        self.assertNotEqual(result.delta_liability, 0.0)
 
 
 if __name__ == "__main__":

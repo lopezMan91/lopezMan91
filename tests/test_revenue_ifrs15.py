@@ -62,6 +62,18 @@ class RevenueIFRS15Tests(unittest.TestCase):
         self.assertEqual(self.engine.classify_license(True), "right_to_access")
         self.assertEqual(self.engine.classify_license(False), "right_to_use")
 
+    def test_variable_consideration_and_financing_split(self):
+        estimate = self.engine.estimate_variable_consideration(
+            scenarios=[(100.0, 0.5), (50.0, 0.3), (0.0, 0.2)],
+            method="expected_value",
+            constraint=10.0,
+        )
+        self.assertEqual(estimate, 55.0)
+
+        split = self.engine.split_significant_financing_component(cash_price=1000.0, deferred_price=1150.0)
+        self.assertEqual(split["revenue_component"], 1000.0)
+        self.assertEqual(split["financing_component"], 150.0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pandas as pd
+from decimal import Decimal
+
+from finance_app.gaap_router import AccountingStandard, AssetRevaluationRouter, LedgerContext
 
 try:
     import streamlit as st
@@ -54,6 +57,34 @@ def main() -> None:
         columns=["Ledger", "Alerta", "Severidad"],
     )
     st.dataframe(alerts, use_container_width=True)
+
+    st.subheader("Matriz de Valuación (Semáforo Normativo)")
+    router = AssetRevaluationRouter()
+    ledgers = [
+        LedgerContext("L01", "NIF MX", AccountingStandard.NIF_MX),
+        LedgerContext("L02", "IFRS", AccountingStandard.IFRS),
+        LedgerContext("L03", "US GAAP", AccountingStandard.US_GAAP),
+    ]
+    impacts = router.process_revaluation(
+        ledgers=ledgers,
+        current_book_values={"L01": Decimal("10000000"), "L02": Decimal("10000000"), "L03": Decimal("10000000")},
+        new_fair_value=Decimal("12000000"),
+        tax_basis_by_ledger={"L02": Decimal("10000000")},
+    )
+    valuation_df = pd.DataFrame([
+        {
+            "Ledger": i.ledger_name,
+            "Norma": i.standard.value,
+            "Acción": i.action,
+            "Valor Libro Actual": float(i.book_value_before),
+            "Ajuste": float(i.revaluation_adjustment),
+            "Nuevo Valor Libro": float(i.book_value_after),
+            "OCI": float(i.oci_surplus),
+            "Impuesto Diferido": float(i.deferred_tax.deferred_tax_amount) if i.deferred_tax else 0.0,
+        }
+        for i in impacts
+    ])
+    st.dataframe(valuation_df, use_container_width=True)
 
 
 if __name__ == "__main__":

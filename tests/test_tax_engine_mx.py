@@ -1,6 +1,16 @@
 import unittest
+from decimal import Decimal
 
-from finance_app.tax_engine_mx import FiscalLine, TaxEngineMX, TaxEvidencePack, TaxLineAttributes, TemporaryDifference
+from finance_app.tax_engine_mx import (
+    FiscalLine,
+    TaxAssetEngine,
+    TaxEngineMX,
+    TaxEvidencePack,
+    TaxLineAttributes,
+    TaxLossCarryforward,
+    TemporaryDifference,
+    compute_dta_from_tax_losses,
+)
 
 
 class TaxEngineMXTests(unittest.TestCase):
@@ -90,6 +100,22 @@ class TaxEngineMXTests(unittest.TestCase):
         )
         self.assertEqual(len(lines), 2)
         self.assertEqual(round(sum(l.debit for l in lines), 2), round(sum(l.credit for l in lines), 2))
+
+    def test_inpc_tax_deduction(self):
+        deduction = TaxAssetEngine.calculate_tax_deduction(
+            moi=Decimal("1000000"),
+            inpc_acquisition=Decimal("120.0"),
+            inpc_current=Decimal("132.0"),
+            rate=Decimal("0.10"),
+        )
+        self.assertEqual(deduction, Decimal("110000.00"))
+
+    def test_dta_from_tax_losses_requires_probability(self):
+        losses = [TaxLossCarryforward(2024, 500000), TaxLossCarryforward(2025, 300000)]
+        dta = compute_dta_from_tax_losses(losses, isr_rate=0.30, probable_future_profit=True)
+        self.assertEqual(dta, 240000.0)
+        dta_blocked = compute_dta_from_tax_losses(losses, isr_rate=0.30, probable_future_profit=False)
+        self.assertEqual(dta_blocked, 0.0)
 
 
 if __name__ == "__main__":

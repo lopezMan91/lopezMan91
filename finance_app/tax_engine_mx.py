@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 
 from .transactions import PolicyLine
@@ -227,3 +228,36 @@ class TaxEngineMX:
             PolicyLine(policy_id, posting_date, "Activo por impuesto diferido", dta_account, amount, 0, ledger_tag),
             PolicyLine(policy_id, posting_date, "Ingreso por impuesto diferido", p_and_l_account, 0, amount, ledger_tag),
         ]
+
+
+class TaxAssetEngine:
+    """Tax bridge for fixed assets (MOI + INPC updates) without touching book layer."""
+
+    @staticmethod
+    def calculate_tax_deduction(moi: Decimal, inpc_acquisition: Decimal, inpc_current: Decimal, rate: Decimal) -> Decimal:
+        if any(v <= 0 for v in (moi, inpc_acquisition, inpc_current)):
+            raise ValueError("MOI e índices INPC deben ser positivos")
+        if not Decimal("0") <= rate <= Decimal("1"):
+            raise ValueError("rate debe estar entre 0 y 1")
+        factor = (inpc_current / inpc_acquisition).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+        deduction_period = moi * rate * factor
+        return deduction_period.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+@dataclass
+class TaxLossCarryforward:
+    fiscal_year: int
+    available_amount: float
+
+
+def compute_dta_from_tax_losses(
+    losses: list[TaxLossCarryforward],
+    isr_rate: float = 0.30,
+    probable_future_profit: bool = True,
+) -> float:
+    if not probable_future_profit:
+        return 0.0
+    if not 0 <= isr_rate <= 1:
+        raise ValueError("isr_rate debe estar entre 0 y 1")
+    total_loss = sum(max(loss.available_amount, 0.0) for loss in losses)
+    return round(total_loss * isr_rate, 2)

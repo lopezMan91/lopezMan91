@@ -18,3 +18,7 @@ Otras funciones incluidas en esta version:
 - Gestor basico de metas financieras.
 - Sistema de notificaciones simple.
 - Esqueleto de gestion de usuarios y consulta a la API de Banxico.
+
+## CI
+
+Se agrego un workflow de GitHub Actions (`.github/workflows/markdownlint.yml`) que ejecuta `markdownlint` sobre `README.md` en cada pull request.
